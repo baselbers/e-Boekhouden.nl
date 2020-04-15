@@ -1,0 +1,333 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: e-Boekhouden.nl\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-03-07 10:34+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.2.0; wp-4.9.9"
+
+#: templates/productspage.html.php:8 templates/intropage.html.php:6
+#: _dev/_BAK/productspage.html.php:8 _dev/_BAK/productspage.html.php:38
+#: includes/classes/ebh-menus.class.php:44
+#: includes/classes/ebh-menus.class.php:44
+msgid "Products"
+msgstr ""
+
+#: templates/productspage.html.php:11 templates/orderspage.html.php:12
+#: _dev/_BAK/productspage.html.php:21
+msgid "All"
+msgstr ""
+
+#: templates/productspage.html.php:12
+msgid "No Large Number"
+msgstr ""
+
+#: templates/productspage.html.php:13
+msgid "Has Large Number"
+msgstr ""
+
+#: templates/helppage.html.php:7 includes/classes/ebh-menus.class.php:54
+#: includes/classes/ebh-menus.class.php:54
+msgid "Help"
+msgstr ""
+
+#: templates/helppage.html.php:10
+msgid "Information"
+msgstr ""
+
+#: templates/helppage.html.php:11
+msgid "Filters (hooks)"
+msgstr ""
+
+#: templates/helppage.html.php:12
+msgid "Plugins"
+msgstr ""
+
+#: templates/orderspage.html.php:7 templates/intropage.html.php:5
+#: _dev/_BAK/orderspage.html.php:7 includes/classes/ebh-menus.class.php:42
+#: includes/classes/ebh-menus.class.php:42
+msgid "Orders"
+msgstr ""
+
+#: templates/orderspage.html.php:10 _dev/_BAK/productspage.html.php:15
+msgid "Not mutated"
+msgstr ""
+
+#: templates/orderspage.html.php:11 _dev/_BAK/productspage.html.php:18
+msgid "Mutated"
+msgstr ""
+
+#: templates/settingspage.html.php:9
+msgid "General Options"
+msgstr ""
+
+#: templates/settingspage.html.php:10
+msgid "Large Number Options"
+msgstr ""
+
+#: templates/settingspage.html.php:11
+#: includes/classes/ebh-settings.class.php:186
+msgid "License"
+msgstr ""
+
+#: templates/settingspage.html.php:12
+msgid "Advanced"
+msgstr ""
+
+#: templates/logspage.html.php:7 includes/classes/ebh-menus.class.php:51
+#: includes/classes/ebh-menus.class.php:51
+msgid "Logs"
+msgstr ""
+
+#: _dev/TEMP/TODO_eboekhouden.class.php:95
+#: includes/classes/ebh-largenumbers.class.php:128
+msgid "EBOEKHOUDEN_NO_LARGE_NUMBER"
+msgstr ""
+
+#: includes/classes/ebh-menus.class.php:48
+msgid "Settings"
+msgstr ""
+
+#: includes/classes/ebh-connector.class.php:70
+msgid "COM_EBOEKHOUDEN_EXTERNAL_NO_USERNAME"
+msgstr ""
+
+#: includes/classes/ebh-connector.class.php:79
+msgid "COM_EBOEKHOUDEN_EXTERNAL_NO_CODE_1"
+msgstr ""
+
+#: includes/classes/ebh-connector.class.php:89
+msgid "COM_EBOEKHOUDEN_EXTERNAL_NO_CODE_2"
+msgstr ""
+
+#: includes/classes/ebh-connector.class.php:139
+msgid "TEMP: Connection error"
+msgstr ""
+
+#: includes/classes/ebh-connector.class.php:165
+#: includes/classes/ebh-connector.class.php:185
+msgid "COM_EBOEKHOUDEN_CONNECTION_ISSUE"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:140
+msgid "Converted License settings"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:152
+msgid "Converted Largenumber settings"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:172
+msgid "General settings"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:173
+msgid "Term of Payment"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:174
+msgid "Max. orders per page"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:175
+msgid "Max. products per page"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:176
+msgid "Ordernumber plugin"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:177
+msgid "Payment refence plugin"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:180
+msgid "Largenumbers"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:181
+msgid "Shipping Costs Large Number"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:182
+msgid "Payment Costs Large Number"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:183
+msgid "Refund Large Number"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:187
+msgid "Username"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:188
+msgid "Security Code #1"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:189
+msgid "Security Code #2"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:192
+msgid "Advanced settings"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:193
+msgid "Enabled debug / logging"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:194
+msgid "Log file directory"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:195
+msgid "Curl Timeout"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:202
+msgid "Fill in the required fields as supplied by e-Boekhouden.nl"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:211
+msgid "Default"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:251
+msgid "If set to \"DEFAULT\", it uses the same as \"Ordernumber plugin\""
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:302
+msgid "Only enable when having issues"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:305
+msgid "Directory for log-files (absolute path)"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:306
+msgid "Default: {webroot}/ebh-logs/"
+msgstr ""
+
+#: includes/classes/ebh-settings.class.php:309
+msgid "Only change when having connection issues"
+msgstr ""
+
+#: includes/classes/ebh-largenumbers.class.php:158
+msgid "Choose largenumber"
+msgstr ""
+
+#: includes/classes/ebh-largenumbers.class.php:174
+msgid "Save"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:42
+msgid "product"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:43
+msgid "products"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:74
+msgid "No products Found"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:94
+msgid "Product SKU"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:95
+msgid "Large Number"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:96
+msgid "Product name"
+msgstr ""
+
+#: includes/wc3/ebh-productlist.class.php:112
+msgid "Mass-assign Large Number"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:38
+msgid "order"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:39
+msgid "orders"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:75
+msgid "No Orders Found"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:101
+msgid "Order ID#"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:102
+msgid "Order Date"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:103
+msgid "Status"
+msgstr ""
+
+#: includes/wc3/ebh-orderlist.class.php:104
+msgid "Mutation"
+msgstr ""
+
+#: templates/help/filters.help.php:4
+msgid "Available Hooks"
+msgstr ""
+
+#: templates/help/info.help.php:5
+msgid "Readme.txt"
+msgstr ""
+
+#: templates/help/info.help.php:10
+msgid "Contact"
+msgstr ""
+
+#: templates/help/info.help.php:35
+msgid "Links"
+msgstr ""
+
+#: templates/help/plugins.help.php:4
+msgid "Supported 3rd party Plugins"
+msgstr ""
+
+#: templates/debug/list.logs.php:7
+msgid "Download log file and email this to: support@e-Boekhouden.nl"
+msgstr ""
+
+#: templates/debug/list.logs.php:16
+msgid "Delete"
+msgstr ""
+
+#: templates/debug/list.logs.php:17
+msgid "Download"
+msgstr ""
+
+#. Name of the plugin
+#. Author of the plugin
+msgid "e-Boekhouden.nl"
+msgstr ""
+
+#. Description of the plugin
+msgid "A plugin which exports orders to e-Boekhouden.nl"
+msgstr ""
+
+#. URI of the plugin
+#. Author URI of the plugin
+msgid "https://www.e-boekhouden.nl"
+msgstr ""

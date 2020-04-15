@@ -1,0 +1,127 @@
+.ebh-wrap {
+    margin: 10px 20px 0 2px;
+}
+#ebh-logo-container {
+    height: 84px;
+    width: 100%;
+    background: #344064;
+}
+#ebh-logo-image {
+    margin: 20px 0px 0px 20px;
+}
+
+.notice {
+    height: 40px;
+    line-height: 40px;
+}
+
+.ebh-button {
+    background: #344064;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    padding: 5px 10px;
+    margin-left: 10px;
+}
+
+
+/* Product Table List: */
+.wp-list-table .column-id { 
+    width: 10%; 
+}
+.wp-list-table .column-sku,
+.wp-list-table .column-largenumber { 
+    width: 15%; 
+}
+.wp-list-table .column-productname,
+.wp-list-table .column-productcategory { 
+    width: 25%; 
+}
+
+
+/* Order Table List: */
+.wp-list-table .column-id { 
+    width: 10%; 
+}
+.wp-list-table .column-ordernr,
+.wp-list-table .column-mutationnr { 
+    width: 15%; 
+}
+.wp-list-table .column-orderinfo,
+.wp-list-table .column-customerinfo { 
+    width: 25%;
+}
+
+
+/* Information pages (and log)): */
+#ebh-hooks h4,
+#ebh-logs h4 {
+    font-size: 14px;
+}
+#ebh-hooks h4 span.ebh-list-label,
+#ebh-logs h4 span.ebh-list-label{
+    font-weight: bold;
+    display: inline-block;
+}
+.ebh-list-label {
+    font-weight: bold;
+    display: block;
+    clear: both;
+}
+
+.ebh-hook-help {
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.ebh-info-description {
+    display: block;
+}
+
+#ebh-help-plugins ul li,
+#ebh-logs ul li {
+    margin-bottom: 20px;
+}
+
+
+
+#ebh-help-info-contact,
+#ebh-help-info-links {
+    width: 50%;
+    float: left;
+}
+
+
+
+.ui-state-active, 
+.ui-widget-content .ui-state-active, 
+.ui-widget-header .ui-state-active, 
+a.ui-button:active, 
+.ui-button:active, 
+.ui-button.ui-state-active:hover {
+    background: #344064;
+    border: 1px solid #344064;
+}
+
+.ebh-log-directory-download,
+.ebh-log-directory-delete {
+    float: right;
+    margin: 0px 5px;
+    /*color: #761919 !important;*/
+}
+
+.ebh-log-directory-delete {
+    color: #ff0000 !important;
+}
+
+
+/* Settings sliders: */
+#slider-ebh_payment_term .custom-handle,
+#slider-ebh_order_list_max .custom-handle,
+#slider-ebh_product_list_max .custom-handle {
+    width: 3em;
+    height: 1.6em;
+    top: 50%;
+    margin-top: -.8em;
+    text-align: center;
+    line-height: 1.6em;
+}    

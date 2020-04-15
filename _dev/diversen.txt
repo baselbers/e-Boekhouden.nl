@@ -1,0 +1,4 @@
+Nakijken:
+
+    - Eboekhouden_Session: "hernoemen" naar "Eboekhouden_Messages"
+        >> inclusief "implemenatie" van WP_Error ??

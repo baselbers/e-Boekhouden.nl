@@ -1,0 +1,9 @@
+Class names:
+    Eboekhouden_{%NAME%}
+
+Function names:
+    private: ebh_{lowercase_function_name_underscores}
+    public: ebh{CamelCaseFunctionName}
+
+
+

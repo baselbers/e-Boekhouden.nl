@@ -1,0 +1,7 @@
+- Eboekhouden_Taxes->ebhGetTaxcode():
+    >> Als in wp-admin bij woocommerce >> taxes de 'waarde' op bijv. HOOG (Nederlands) is ingesteld, 
+    wordt deze NIET gevonden en geeft "error"
+    >> settings maken voor "mapping" ???
+
+
+- php 5.5  geeft error als :: gebruikt word (CLASS::CONST_NAME)

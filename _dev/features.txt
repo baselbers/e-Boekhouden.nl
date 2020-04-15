@@ -1,0 +1,27 @@
+Ook even in "project" map kijken voor text files met "features" en dergelijke
+
+
+
+- [ ] debug 'mode'
+        - 'kijken' WAT alleemaal te loggen (liefs "zo veel mogelijk")
+        - [ ] Meldingen en/of Log to file
+- [ ] 'system info' dump
+        >> dump maken van info, zodat klant makkelijk dit naar ons kan sturen
+        - [ ] wordpress versie
+        - [ ] woocommerce versie
+        - [ ] eboekhouden versie
+        - [ ] "systeem"     (OS / memory / httpd (apache / nginx / xampp) / harddisk / "host (bijv. domein, etc/)" / phpinfo )
+        - [ ] lijst van alle "active" plugins
+        - [ ] ...
+
+        
+- [ ] "order column setting(s)"
+        - [ ] hide/show 'woocommerce order name (post_title)"?
+        - [ ] hide/show 'woocommerce' customer info?     (as 'popup'?)
+
+
+
+"Issues":
+- [ ] Huidge 'custom meta' heet: mutation_nr
+        >> misschien 'hernoemen' naar: ebh_mutation_nr
+        >> dit om te voorkomen dat eventuele andere plugins OOK 'mutation' gebruiken?
