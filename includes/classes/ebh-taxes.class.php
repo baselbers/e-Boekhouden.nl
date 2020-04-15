@@ -21,46 +21,46 @@ if (!function_exists('is_admin') && !defined('_EBOEKHOUDEN_PLUGIN')) {
  * - [ ] Add 'extra (new)' setttings:
  *      - [ ] tax "mapping" for WC-taxes <-> ebh_create_taxcodes_array
  *      - [ ] "eu" countries
- *      - [ ] 
- * 
+ *      - [ ]
+ *
  */
 
 
 if (!class_exists('Eboekhouden_Taxes')) {
-    
+
     class Eboekhouden_Taxes {
-        
+
         private $ebh_tax_codes;
         private $ebh_eu_countries;
-        
+
         private $wc_tax;
-        
-        
+
+
         function __construct() {
             $this->ebh_tax_codes = array();
             $this->ebh_eu_countries = array();
-            
+
             $this->init();
         }
-        
-        
+
+
         private function init() {
             $this->ebh_create_taxcodes_array();
             $this->ebh_create_eu_countries_array();
-            
+
             $this->wc_tax = new WC_Tax();
         }
-        
-        
+
+
         private function ebh_create_taxcodes_array() {
             $this->ebh_tax_codes['NONE'] = 'GEEN';
             $this->ebh_tax_codes['LOW'] = 'LAAG_VERK';
             $this->ebh_tax_codes['HIGH'] = 'HOOG_VERK';
             $this->ebh_tax_codes['VHIGH'] = 'HOOG_VERK_21';
             $this->ebh_tax_codes['ZERO_IN_EU'] = 'BI_EU_VERK';
-            $this->ebh_tax_codes['ZERO_OUT_EU'] = 'BU_EU_VERK';            
+            $this->ebh_tax_codes['ZERO_OUT_EU'] = 'BU_EU_VERK';
         }
-        
+
         private function ebh_create_eu_countries_array() {
 //            $this->ebh_eu_countries = array(
 //                'AUT', 'AT', 'BEL', 'BE', 'BGR', 'BG', 'CZE', 'CZ',
@@ -106,15 +106,15 @@ if (!class_exists('Eboekhouden_Taxes')) {
             $this->ebh_eu_countries['LVA'] = 'a';
             $this->ebh_eu_countries['LV'] = 'Latvia';
             $this->ebh_eu_countries['MCO'] = 'a';
-            $this->ebh_eu_countries['MC'] = 'Monaco';            
+            $this->ebh_eu_countries['MC'] = 'Monaco';
             $this->ebh_eu_countries['MLT'] = 'a';
             $this->ebh_eu_countries['MT'] = 'Malta';
             $this->ebh_eu_countries['NLD'] = 'Netherlands';
-            $this->ebh_eu_countries['NL'] = 'Netherlands';            
+            $this->ebh_eu_countries['NL'] = 'Netherlands';
             $this->ebh_eu_countries['POL'] = 'a';
-            $this->ebh_eu_countries['PL'] = 'Poland';                
+            $this->ebh_eu_countries['PL'] = 'Poland';
             $this->ebh_eu_countries['PRT'] = 'a';
-            $this->ebh_eu_countries['PT'] = 'Portugal';        
+            $this->ebh_eu_countries['PT'] = 'Portugal';
             $this->ebh_eu_countries['ROM'] = 'a';
             $this->ebh_eu_countries['RO'] = 'Romania';
             $this->ebh_eu_countries['SWE'] = 'a';
@@ -123,14 +123,50 @@ if (!class_exists('Eboekhouden_Taxes')) {
             $this->ebh_eu_countries['SK'] = 'Slovakia';
             $this->ebh_eu_countries['SVN'] = 'a';
             $this->ebh_eu_countries['SI'] = 'Slovenia';
-                 
+
         }
-        
-        
-        
+
+	    /**
+	     * Get tax code for ebh.
+	     * We do not want to find the tax rates based on the tax class since the tax rates can change over time while the orders do not.
+	     *
+	     * @param object $item Can be one of many WC Order Item types like line items, fees etc.
+	     * @param int $order_id WC Order ID.
+	     *
+	     * @return string
+	     *
+	     */
+        public function GetTaxCode( $item, $order_id ) {
+	        $rate_percent = round( (float) $item->get_total_tax() / (float) $item->get_total() * 100 );
+	        // Standard rate.
+	        if ( (int) $rate_percent === 21 ) {
+		        return 'HOOG_VERK';
+	        }
+
+	        // Reduced rate.
+	        if ( (int) $rate_percent === 9 || (int) $rate_percent === 6 ) {
+		        return 'LAAG_VERK';
+	        }
+
+	        // ICP.
+	        // WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
+	        $is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
+	        if ( $is_vat_exempt === 'yes' ) {
+		        return 'BI_EU_VERK';
+	        }
+
+	        // Non-EU.
+	        $order = wc_get_order( $order_id );
+	        if ( false === in_array( $order->get_billing_country(), WC()->countries->get_european_union_countries(), true ) ) {
+		        return 'BU_EU_VERK';
+	        }
+
+			return 'GEEN';
+        }
+
         public function ebhGetTaxcode($taxcode) {
             return '';
-            
+
 //            if (array_key_exists(strtoupper($taxcode), $this->ebh_tax_codes)) {
 //                return $this->ebh_tax_codes[strtoupper($taxcode)];
 //            } else {
@@ -141,12 +177,12 @@ if (!class_exists('Eboekhouden_Taxes')) {
 ////                wp_die($message);
 //            }
         }
-        
-        
-        
+
+
+
         public function ebhGetTaxes($incl, $excl, $country) {
             $return = array();
-            
+
             if (round($incl) == round($excl)) {
                 $applied = 0;
                 $tax_amount = 0;
@@ -157,8 +193,8 @@ if (!class_exists('Eboekhouden_Taxes')) {
             }
 
             if ($applied) {
-                
-                if (intval($applied) < 12) {                    
+
+                if (intval($applied) < 12) {
                     $code = $this->ebh_get_taxcode('LOW');
                 } else {
                     if (intval($applied) < 20) {
@@ -167,11 +203,11 @@ if (!class_exists('Eboekhouden_Taxes')) {
                         $code = $this->ebh_get_taxcode('VHIGH');
                     }
                 }
-                
+
             } else {
-                
+
                 if (array_key_exists(strtoupper($country), $this->ebh_eu_countries)) {
-                    
+
                     if (strtoupper($country) != 'NL' && strtoupper($country) != 'NLD') {
                         // JOOMLA??
                         // Looks like "joomla code"... WHAT should be in 'params' ??
@@ -186,38 +222,38 @@ if (!class_exists('Eboekhouden_Taxes')) {
                             //$code = self::$taxCodes['NONE'];
                             $code = $this->ebh_get_taxcode('NONE');
                         }
-                        
+
                     } else {
                         $code = $this->ebh_get_taxcode('NONE');
                     }
-                    
-                } else {                    
+
+                } else {
                     $code = $this->ebh_get_taxcode('ZERO_OUT_EU');
                 }
             }
-             
+
             $return['inclusive'] = $incl;
             $return['exclusive'] = $excl;
             $return['applied'] = $applied;
             $return['tax_amount'] = $tax_amount;
             $return['code'] = $code;
             $return['country'] = $country;
-            
-            
+
+
             // TODO: Add 'filter' ??
-            return $return;                             
-            
+            return $return;
+
         }
-        
-        
-        public function wcTax() {           
+
+
+        public function wcTax() {
             if (!$this->wc_tax instanceof WC_Tax) {
-                $message = '$wc_tax NOT an "instance_of" WC_TAX';                
-                ebh_debug_message($message, 'Eboekhouden_Taxes', 'wcTax', 'taxes.log');                
-                wp_die($message);                
+                $message = '$wc_tax NOT an "instance_of" WC_TAX';
+                ebh_debug_message($message, 'Eboekhouden_Taxes', 'wcTax', 'taxes.log');
+                wp_die($message);
             }
             return $this->wc_tax;
         }
-        
+
     }
 }

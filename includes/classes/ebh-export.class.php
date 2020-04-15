@@ -119,9 +119,10 @@ if (!class_exists("Eboekhouden_Export")) {
                 $mutation->SetSubTotal($item_data['total']);
                 $mutation->SetTaxTotal($item_data['total_tax']);
                 $mutation->SetLargeNumber($largenumber);
-                //$mutation->SetTaxPercent((isset($rate['label'])) ? EboekhoudenJaagers::$taxCodes[$rate['label']] : '');
-                $mutation->SetTaxPercent((isset($rate['label'])) ? $this->Eboekhouden_Taxes->ebhGetTaxcode($rate['label']): ''); 
-                //var_dump($rate);die();
+
+	            $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($orderItem, $this->wc_order->get_id());
+                $mutation->SetTaxPercent($taxCode);
+
                 $this->ebh_export_mutations[] = $mutation->GetMutation();
             
             }       
@@ -131,20 +132,25 @@ if (!class_exists("Eboekhouden_Export")) {
         
         
         private function ebh_wc_shipping() {
-            $orderShipping = $this->wc_order->get_total_shipping();
-            $orderShippingTax = $this->wc_order->get_shipping_tax();       
-                   
-            if ($orderShipping > 0) {
-                $mutation = new Eboekhouden_Mutation('shipping', $this->wc_order_id);
-                $mutation->SetTotal($orderShipping + $orderShippingTax);
-                $mutation->SetSubTotal($orderShipping);
-                $mutation->SetTaxTotal($orderShippingTax);
-                //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
-                $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('shippingcost'));                
-                //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);
-                $mutation->SetTaxPercent(isset($shippingTaxRate['label']) ? $this->Eboekhouden_Taxes->ebhGetTaxcode($shippingTaxRate['label']) : '');
-                $this->ebh_export_mutations[] = $mutation->GetMutation();
-            }            
+        	if( (int) $this->wc_order->get_shipping_total() <= 0 ) {
+        		return;
+	        }
+
+        	foreach ( $this->wc_order->get_shipping_methods() as $shipping_id => $shipping ) {
+
+		        $mutation = new Eboekhouden_Mutation('shipping', $this->wc_order_id);
+		        $mutation->SetTotal( (float) $shipping->get_total() + (float) $shipping->get_total_tax());
+		        $mutation->SetSubTotal((float)$shipping->get_total());
+		        $mutation->SetTaxTotal((float)$shipping->get_total_tax());
+		        //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
+		        $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('shippingcost'));
+
+		        $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($shipping->get_taxes(), $this->wc_order->get_id());
+		        $mutation->SetTaxPercent($taxCode);
+
+		        $this->ebh_export_mutations[] = $mutation->GetMutation();
+
+	        }
         }
 
         private function ebh_wc_refunds() {
@@ -154,8 +160,8 @@ if (!class_exists("Eboekhouden_Export")) {
             foreach ($orderRefunds as $refund) {
                 
                 if (count($refund->get_items()) != 0) {
-                    
-                    foreach ($refund->get_items() as $refund_item) {
+
+	                foreach ($refund->get_items() as $refund_item) {
 
                         $rf_tax_class = $refund_item['tax_class'];
                         $rf_rates = $this->Eboekhouden_Taxes->wcTax()->get_rates($rf_tax_class);
@@ -170,7 +176,10 @@ if (!class_exists("Eboekhouden_Export")) {
                         //$mutation->SetLargeNumber($rf_largenumber);
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
-                        $mutation->SetTaxPercent((isset($rf_rate['label'])) ? $this->Eboekhouden_Taxes->ebhGetTaxcode($rf_rate['label']) : '');
+
+	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund->get_taxes(), $refund->get_id());
+	                    $mutation->SetTaxPercent($taxCode);
+
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 
                     }
                     
@@ -184,7 +193,9 @@ if (!class_exists("Eboekhouden_Export")) {
     //                    $mutation->SetLargeNumber($rf_largenumber);
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');                    
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
-                        $mutation->SetTaxPercent((isset($rf_rate['label'])) ? $this->Eboekhouden_Taxes->ebhGetTaxcode($rf_rate['label']) : '');
+
+		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund->get_taxes(), $refund->get_id());
+		                $mutation->SetTaxPercent($taxCode);
 
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 
              
@@ -225,7 +236,9 @@ if (!class_exists("Eboekhouden_Export")) {
                     //$mutation->SetLargeNumber(isset($pluginSettings['ebh_paymentcost_largenumber']) ? $pluginSettings['ebh_paymentcost_largenumber'] : '');
                     $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
                     //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
-                    //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);                
+                    //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);
+	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($value->get_taxes(), $this->wc_order->get_id());
+	                $mutation->SetTaxPercent($taxCode);
 
     //                $fee_mutation['BEDRAGINCL'] = round($line_total + $btw_bedrag, 2);
     //                $fee_mutation['BEDRAGEXCL'] = round($line_total,2);
