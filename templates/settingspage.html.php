@@ -53,7 +53,7 @@
             var input_element = $('input[name="ebh_settings_general[ebh_payment_term]"');
             var handle = $("#custom-handle-ebh_payment_term");
             $('#slider-ebh_payment_term').slider({
-                min: 7,
+                min: 0,
                 max: 90,
                 step: 1,
                 value: input_element.val(),
