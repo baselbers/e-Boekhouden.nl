@@ -179,7 +179,7 @@ if (!class_exists("Eboekhouden_Export")) {
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
 
-	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund_item, $refund->get_id());
+	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund_item, $this->wc_order_id);
 	                    $mutation->SetTaxPercent($taxCode);
 
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 
@@ -196,7 +196,7 @@ if (!class_exists("Eboekhouden_Export")) {
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');                    
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
 
-		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $refund->get_id());
+		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $this->wc_order_id);
 		                $mutation->SetTaxPercent($taxCode);
 
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 

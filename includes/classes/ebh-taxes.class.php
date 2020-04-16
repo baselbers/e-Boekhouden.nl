@@ -137,7 +137,25 @@ if (!class_exists('Eboekhouden_Taxes')) {
 	     *
 	     */
         public function GetTaxCode( $item, $order_id ) {
-	        $rate_percent = round( (float) $item->get_total_tax() / (float) $item->get_total() * 100 );
+			// ICP.
+			// WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
+			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
+			if ( $is_vat_exempt === 'yes' ) {
+				return 'BI_EU_VERK';
+			}
+
+			// Non-EU.
+			$order = wc_get_order( $order_id );
+			if ( false === in_array( $order->get_billing_country(), WC()->countries->get_european_union_countries(), true ) ) {
+				return 'BU_EU_VERK';
+			}
+
+			// Still no tax?
+			if ( (int) abs( $item->get_total_tax() ) === 0 ) {
+				return 'GEEN';
+			}
+
+	        $rate_percent = round( (float) abs( $item->get_total_tax() ) / (float) abs( $item->get_total() ) * 100 );
 	        // Standard rate.
 	        if ( (int) $rate_percent === 21 ) {
 		        return 'HOOG_VERK';
@@ -148,19 +166,7 @@ if (!class_exists('Eboekhouden_Taxes')) {
 		        return 'LAAG_VERK';
 	        }
 
-	        // ICP.
-	        // WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
-	        $is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
-	        if ( $is_vat_exempt === 'yes' ) {
-		        return 'BI_EU_VERK';
-	        }
-
-	        // Non-EU.
-	        $order = wc_get_order( $order_id );
-	        if ( false === in_array( $order->get_billing_country(), WC()->countries->get_european_union_countries(), true ) ) {
-		        return 'BU_EU_VERK';
-	        }
-
+	        // Default.
 			return 'GEEN';
         }
 
