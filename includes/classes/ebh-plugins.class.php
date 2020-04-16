@@ -42,7 +42,10 @@ if (!class_exists("Eboekhouden_Plugins")) {
                 //$number = apply_filters('woocommerce_order_number', $order->get_id(), $order);  
                 //$number = apply_filters('woocommerce_order_number', $order->get_id(), $order);  
                 $number = $order->get_order_number();
-                $number = sprintf('%08d', $number);        
+
+                if (strlen((string)$number) < 7){
+	                $number = sprintf('%07d', $number);
+                }
                 
             } elseif ($plugin == 'woocommerce-sequential-order-numbers') {
                 //die('TODO: plugin support for "woocommerce-sequential-order-numbers"');
