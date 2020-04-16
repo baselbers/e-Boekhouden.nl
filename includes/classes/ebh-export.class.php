@@ -72,6 +72,8 @@ if (!class_exists("Eboekhouden_Export")) {
              * </NAW>
              */
 
+            $vat_number = get_post_meta( $this->wc_order_id, '_vat_number', true );
+
             $customer = array(
                 'BEDRIJF' => strlen($this->wc_order->get_billing_company()) > 0 ? $this->wc_order->get_billing_company() : implode(' ', array($this->wc_order->get_billing_first_name(), $this->wc_order->get_billing_last_name())),
                 'ADRES' => implode(' ', array($this->wc_order->get_billing_address_1(), $this->wc_order->get_billing_address_2())),
@@ -79,7 +81,7 @@ if (!class_exists("Eboekhouden_Export")) {
                 'PLAATS' => $this->wc_order->get_billing_city(),
                 'TELEFOON' => $this->wc_order->get_billing_phone(), // RBS 260117
                 'EMAIL' => $this->wc_order->get_billing_email() // RBS 260117
-            );   
+            );
 
             $this->ebh_export_customer = apply_filters('ebh_filter_build_customer', $customer, $this->wc_order_id, $this->wc_order);
         }
@@ -335,7 +337,7 @@ if (!class_exists("Eboekhouden_Export")) {
         
         
         public function ebhExportOrder() {
-            
+
             //die('ebhExportOrder');
             $export_data = $this->ebhBuildExport();
             //$export_data = array_merge($this->ebh_export_customer, $this->ebh_export_mutations);
