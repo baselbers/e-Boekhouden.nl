@@ -147,7 +147,7 @@ if (!class_exists("Eboekhouden_Export")) {
 		        //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
 		        $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('shippingcost'));
 
-		        $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($shipping->get_taxes(), $this->wc_order->get_id());
+		        $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($shipping, $this->wc_order->get_id());
 		        $mutation->SetTaxPercent($taxCode);
 
 		        $this->ebh_export_mutations[] = $mutation->GetMutation();
@@ -179,7 +179,7 @@ if (!class_exists("Eboekhouden_Export")) {
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
 
-	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund->get_taxes(), $refund->get_id());
+	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund_item, $refund->get_id());
 	                    $mutation->SetTaxPercent($taxCode);
 
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 
@@ -196,7 +196,7 @@ if (!class_exists("Eboekhouden_Export")) {
                         //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');                    
                         $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
 
-		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund->get_taxes(), $refund->get_id());
+		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $refund->get_id());
 		                $mutation->SetTaxPercent($taxCode);
 
                         $this->ebh_export_mutations[] = $mutation->GetMutation(); 
@@ -239,7 +239,7 @@ if (!class_exists("Eboekhouden_Export")) {
                     $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
                     //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
                     //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);
-	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($value->get_taxes(), $this->wc_order->get_id());
+	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($value, $this->wc_order->get_id());
 	                $mutation->SetTaxPercent($taxCode);
 
     //                $fee_mutation['BEDRAGINCL'] = round($line_total + $btw_bedrag, 2);
