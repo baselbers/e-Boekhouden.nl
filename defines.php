@@ -27,4 +27,4 @@ define('EBOEKHOUDEN_URL_ASSETS', EBOEKHOUDEN_URL . '/assets/');
 
 // Define woocmmerce "info":
 define('EBOEKHOUDEN_WC_VERSION', get_option('woocommerce_version'));
-define('EBOEKHOUDEN_WC_FOLDER', EBOEKHOUDEN_DIR_INCLUDES . 'wc' . $wc_version[0] . DIRECTORY_SEPARATOR);
+define('EBOEKHOUDEN_WC_FOLDER', EBOEKHOUDEN_DIR_INCLUDES . 'wc3' . DIRECTORY_SEPARATOR);
