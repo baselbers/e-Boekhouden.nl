@@ -80,7 +80,8 @@ if (!class_exists("Eboekhouden_Export")) {
                 'POSTCODE' => $this->wc_order->get_billing_postcode(),
                 'PLAATS' => $this->wc_order->get_billing_city(),
                 'TELEFOON' => $this->wc_order->get_billing_phone(), // RBS 260117
-                'EMAIL' => $this->wc_order->get_billing_email() // RBS 260117
+                'EMAIL' => $this->wc_order->get_billing_email(), // RBS 260117
+				'OBNUMMER' => $vat_number === 'yes' ? $vat_number : '', // OBNUMMER NOT WORKING!
             );
 
             $this->ebh_export_customer = apply_filters('ebh_filter_build_customer', $customer, $this->wc_order_id, $this->wc_order);
@@ -120,7 +121,7 @@ if (!class_exists("Eboekhouden_Export")) {
                 $mutation->SetTotal($item_data['total'] + $item_data['total_tax']);
                 $mutation->SetSubTotal($item_data['total']);
                 $mutation->SetTaxTotal($item_data['total_tax']);
-                $mutation->SetLargeNumber($largenumber);
+				$mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
 
 	            $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($orderItem, $this->wc_order->get_id());
                 $mutation->SetTaxPercent($taxCode);
@@ -156,56 +157,20 @@ if (!class_exists("Eboekhouden_Export")) {
         }
 
         private function ebh_wc_refunds() {
-            
             $orderRefunds = $this->wc_order->get_refunds();
         
             foreach ($orderRefunds as $refund) {
-                
-                if (count($refund->get_items()) != 0) {
+				$mutation = new Eboekhouden_Mutation( 'refund', $refund->id );
+				$mutation->SetTotal( get_post_meta( $refund->id, '_order_total', true ) );
+				$mutation->SetSubTotal( get_post_meta( $refund->id, '_order_total', true ) - get_post_meta( $refund->id, '_order_tax', true ) );
+				$mutation->SetTaxTotal( get_post_meta( $refund->id, '_order_tax', true ) );
+				$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'refund' ) );
 
-	                foreach ($refund->get_items() as $refund_item) {
+				$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $refund, $this->wc_order_id );
+				$mutation->SetTaxPercent( $taxCode );
 
-                        $rf_tax_class = $refund_item['tax_class'];
-                        $rf_rates = $this->Eboekhouden_Taxes->wcTax()->get_rates($rf_tax_class);
-                        $rf_rate = current($rf_rates);
-//                        $rf_orderItemProduct = new WC_Product($refund_item['product_id']);
-//                        $rf_largenumber = $rf_orderItemProduct->get_attribute('large_number');
-
-                        $mutation = new Eboekhouden_Mutation('refund', $this->wc_order_id);
-                        $mutation->SetTotal(get_post_meta($refund->id,'_order_total',true));
-                        $mutation->SetSubTotal(get_post_meta($refund->id,'_order_total',true) - get_post_meta($refund->id,'_order_tax',true));
-                        $mutation->SetTaxTotal(get_post_meta($refund->id,'_order_tax',true));
-                        //$mutation->SetLargeNumber($rf_largenumber);
-                        //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');
-                        $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
-
-	                    $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund_item, $this->wc_order_id);
-	                    $mutation->SetTaxPercent($taxCode);
-
-                        $this->ebh_export_mutations[] = $mutation->GetMutation(); 
-                    }
-                    
-                } else {
-                        $refund_data_item = $refund->get_data();
-                        
-                        $mutation = new Eboekhouden_Mutation('refund', $this->wc_order_id);
-                        $mutation->SetTotal(get_post_meta($refund->id,'_order_total',true));
-                        $mutation->SetSubTotal(get_post_meta($refund->id,'_order_total',true) - get_post_meta($refund->id,'_order_tax',true));
-                        $mutation->SetTaxTotal(get_post_meta($refund->id,'_order_tax',true));
-    //                    $mutation->SetLargeNumber($rf_largenumber);
-                        //$mutation->SetLargeNumber(isset($pluginSettings['ebh_refund_largenumber']) ? $pluginSettings['ebh_refund_largenumber'] : '');                    
-                        $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('refund'));
-
-		                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $this->wc_order_id);
-		                $mutation->SetTaxPercent($taxCode);
-
-                        $this->ebh_export_mutations[] = $mutation->GetMutation(); 
-             
-
-                }
-
-            }               
-            
+				$this->ebh_export_mutations[] = $mutation->GetMutation();
+            }
         }
         
 
@@ -392,7 +357,7 @@ if (!class_exists("Eboekhouden_Export")) {
             $this->ebh_wc_order_items();
             $this->ebh_wc_shipping();
             $this->ebh_wc_fees();
-            $this->ebh_wc_refunds();
+            //$this->ebh_wc_refunds();
             
 //               return array(
 //                    'ACTION' => $this->_data->mutation_nr ? 'ALTER_MUTATIE' : 'ADD_MUTATIE',
