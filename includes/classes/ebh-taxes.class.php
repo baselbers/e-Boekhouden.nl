@@ -140,7 +140,8 @@ if (!class_exists('Eboekhouden_Taxes')) {
 			// ICP.
 			// WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
 			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
-			if ( $is_vat_exempt === 'yes' ) {
+			$vat_number = get_post_meta( $order_id, '_vat_number', true );
+			if ( $is_vat_exempt === 'yes' || ! empty( $vat_number ) ) {
 				return 'BI_EU_VERK';
 			}
 
