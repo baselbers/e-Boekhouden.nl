@@ -136,14 +136,19 @@ if (!class_exists('Eboekhouden_Taxes')) {
 	     * @return string
 	     *
 	     */
-        public function GetTaxCode( $item, $order_id ) {
+        public function GetTaxCode( $item, $order_id, $virtual = false ) {
 			// ICP.
 			// WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
 	        $order = wc_get_order( $order_id );
 			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
 			$vat_number = get_post_meta( $order_id, '_vat_number', true );
 			if ( 'NL' !== $order->get_billing_country() && $is_vat_exempt === 'yes' && ! empty( $vat_number ) ) {
-				return 'BI_EU_VERK';
+
+				if ( $virtual ) {
+					return 'BI_EU_VERK_D'; // Services EU.
+				}
+
+				return 'BI_EU_VERK'; // Goods EU.
 			}
 
 			// Non-EU.
