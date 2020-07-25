@@ -42,7 +42,7 @@ if (!class_exists('Eboekhouden_Session')) {
         
         public function ebhRegisterSession(){
             if (!session_id()) {
-                session_start();
+                //session_start();
             }      
         }
         
