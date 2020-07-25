@@ -72,8 +72,6 @@ if (!class_exists("Eboekhouden_Export")) {
              * </NAW>
              */
 
-            $vat_number = get_post_meta( $this->wc_order_id, '_vat_number', true );
-
             $customer = array(
                 'BEDRIJF' => strlen($this->wc_order->get_billing_company()) > 0 ? $this->wc_order->get_billing_company() : implode(' ', array($this->wc_order->get_billing_first_name(), $this->wc_order->get_billing_last_name())),
                 'ADRES' => implode(' ', array($this->wc_order->get_billing_address_1(), $this->wc_order->get_billing_address_2())),
@@ -81,8 +79,12 @@ if (!class_exists("Eboekhouden_Export")) {
                 'PLAATS' => $this->wc_order->get_billing_city(),
                 'TELEFOON' => $this->wc_order->get_billing_phone(), // RBS 260117
                 'EMAIL' => $this->wc_order->get_billing_email(), // RBS 260117
-				'OBNUMMER' => $vat_number === 'yes' ? $vat_number : '', // OBNUMMER NOT WORKING!
             );
+
+	        $vat_number = get_post_meta( $this->wc_order_id, '_vat_number', true );
+	        if ( '' !== $vat_number ) {
+	        	$customer['OBNUMMER'] = (string) $vat_number;
+	        }
 
             $this->ebh_export_customer = apply_filters('ebh_filter_build_customer', $customer, $this->wc_order_id, $this->wc_order);
         }
@@ -123,16 +125,13 @@ if (!class_exists("Eboekhouden_Export")) {
                 $mutation->SetTaxTotal($item_data['total_tax']);
 				$mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
 
-	            $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($orderItem, $this->wc_order->get_id());
+	            $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($orderItem, $this->wc_order->get_id(), $orderItemProduct->is_virtual());
                 $mutation->SetTaxPercent($taxCode);
 
                 $this->ebh_export_mutations[] = $mutation->GetMutation();
             
             }       
-            
-         //   die();
         }
-        
         
         private function ebh_wc_shipping() {
         	if( (int) $this->wc_order->get_shipping_total() <= 0 ) {
@@ -158,15 +157,16 @@ if (!class_exists("Eboekhouden_Export")) {
 
         private function ebh_wc_refunds() {
             $orderRefunds = $this->wc_order->get_refunds();
-        
-            foreach ($orderRefunds as $refund) {
+
+            /** @var WC_Order_Refund $refund */
+	        foreach ($orderRefunds as $refund) {
 				$mutation = new Eboekhouden_Mutation( 'refund', $refund->id );
 				$mutation->SetTotal( get_post_meta( $refund->id, '_order_total', true ) );
 				$mutation->SetSubTotal( get_post_meta( $refund->id, '_order_total', true ) - get_post_meta( $refund->id, '_order_tax', true ) );
 				$mutation->SetTaxTotal( get_post_meta( $refund->id, '_order_tax', true ) );
 				$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'refund' ) );
 
-				$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $refund, $this->wc_order_id );
+				$taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $this->wc_order_id); // ToDo!
 				$mutation->SetTaxPercent( $taxCode );
 
 				$this->ebh_export_mutations[] = $mutation->GetMutation();
@@ -179,7 +179,10 @@ if (!class_exists("Eboekhouden_Export")) {
             $fees = $this->wc_order->get_fees();
             if (count($fees) > 0 ) {
 
-                foreach ($fees as $key => $value) {
+	            /**
+	             * @var WC_Order_Item_Fee $fee.
+	             */
+                foreach ($fees as $key => $fee) {
 
 //                    $fee_mutation = array(
 //                       'BEDRAGINCL' => 0,
@@ -193,8 +196,8 @@ if (!class_exists("Eboekhouden_Export")) {
 
 
 
-                    $line_total = $value->get_total();
-                    $btw_bedrag = $value->get_total_tax();
+                    $line_total = $fee->get_total();
+                    $btw_bedrag = $fee->get_total_tax();
 
                     $mutation = new Eboekhouden_Mutation('fees', $this->wc_order_id);
                     $mutation->SetTotal($line_total + $btw_bedrag);
@@ -204,7 +207,7 @@ if (!class_exists("Eboekhouden_Export")) {
                     $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
                     //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
                     //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);
-	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($value, $this->wc_order->get_id());
+	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($fee, $this->wc_order->get_id());
 	                $mutation->SetTaxPercent($taxCode);
 
     //                $fee_mutation['BEDRAGINCL'] = round($line_total + $btw_bedrag, 2);
