@@ -216,6 +216,7 @@ if (!class_exists('Eboekhouden_Orderlist')) {
                 'post_status'   => array('wc-processing', 'wc-completed','wc-refunded' ),
                 'posts_per_page'=> $per_page,
                 'offset' => $offset,
+                'year' => date_i18n( 'Y', current_time( 'mysql' ) ), // Only show orders for current year.
                 'orderby' => $orderby,
                 'order' => $order,
                 'meta_query' => $meta_query
