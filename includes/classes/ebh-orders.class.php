@@ -39,7 +39,6 @@ if (!class_exists('Eboekhouden_Orders')) {
 
         }
 
-
         public function GetOrders($status = 'all') {
             if ($status == 'not_mutated') {
                 $meta_query = array(
@@ -74,7 +73,7 @@ if (!class_exists('Eboekhouden_Orders')) {
                 'posts_per_page'=> -1,
                 'fields' => 'ids',      // << ivm grote aantallen alleen id's ophalen ipv alle velden
                 //'offset' => $offset,
-				'year' => date_i18n( 'Y', current_time( 'mysql' ) ), // Only show orders for current year.
+				'year' => '2020', //date_i18n( 'Y', current_time( 'mysql' ) ), // Only show orders for current year.
                 'orderby' => $orderby,
                 'order' => $order            
             );
