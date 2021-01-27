@@ -76,7 +76,11 @@ if (!class_exists("Eboekhouden_Menus")) {
             $vars = array(
                 'base_url' => 'admin.php?page=eboekhouden-orders',
                 'active_tab' => (filter_input(INPUT_GET, 'tab')) ? filter_input(INPUT_GET, 'tab') : 'not_mutated',
-                'order_count' => $Eboekhouden_Orders->CountOrders(),
+                'order_count' => array(
+                	'all' => Eboekhouden_Orders::CountOrders( 'all' ),
+					'not_mutated' => Eboekhouden_Orders::CountOrders( 'not_mutated' ),
+					'mutated' => Eboekhouden_Orders::CountOrders( 'mutated' )
+				),
                 'order_list' => $Eboekhouden_Orderlist
             );
             

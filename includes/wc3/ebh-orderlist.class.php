@@ -22,13 +22,8 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 		private $Eboekhouden_Orders;
 		private $Eboekhouden_Session;
 		private $Eboekhouden_Plugins;
-
-
 		private $max_orders_per_page;
-
-
 		public $data;
-
 
 		function __construct( $prepare_items = true ) {
 			//global $status, $page;
@@ -50,7 +45,6 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 			}
 
 		}
-
 
 		private function init() {
 			$this->Eboekhouden_Settings = new Eboekhouden_Settings();
@@ -196,7 +190,6 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				$meta_query        = array_merge( $meta_query, $meta_query_search );
 			}
 
-
 			$columns = $this->get_columns();
 
 			$hidden                = array();
@@ -220,7 +213,10 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
 				'posts_per_page' => $per_page,
 				'offset'         => $offset,
-				'year'           => '2020', //date_i18n( 'Y', current_time( 'mysql' ) ), // Only show orders for current year.
+				'date_query' => array(
+					'after' => date('2019-12-30' ), // Only show orders after specific date.
+					'inclusive' => false,
+				),
 				'orderby'        => $orderby,
 				'order'          => $order,
 				'meta_query'     => $meta_query
@@ -250,7 +246,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 			$total_items = count( $posts );
 
 			$pagination_args = array(
-				'total_items' => $total_items,
+				'total_items' => Eboekhouden_Orders::CountOrders( $eb_order_status ),
 				'per_page'    => $per_page
 			);
 
