@@ -77,8 +77,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 
 		public function get_sortable_columns() {
 			$sortable_columns = array(
-				'ID'          => array( 'ID', false ),
-				//'post_title'  => array('post_title', false),
+				'post_title'  => array( 'post_title', false ),
 				'post_status' => array( 'post_status', false ),
 				'post_date'   => array( 'post_date', false ),
 				'mutation_nr' => array( 'mutation_nr', false )
@@ -91,8 +90,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 		public function get_columns() {
 			$columns = array(
 				'cb'          => '<input type="checkbox" />',
-				'ID'          => __( 'Order ID#', 'eboekhouden' ),
-				//'post_title' => __('Order Name', 'eboekhouden'),
+				'post_title'  => __( 'Order', 'eboekhouden' ),
 				'post_date'   => __( 'Order Date', 'eboekhouden' ),
 				'post_status' => __( 'Status', 'eboekhouden' ),
 				'mutation_nr' => __( 'Mutation', 'eboekhouden' )
@@ -130,19 +128,23 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 
 
 		public function column_ID( $item ) {
-			//$ebh_order_number = $this->Eboekhouden_Orders->ebhFormatOrdernumber($item->ID);
-			//var_dump($item);
-			//echo $item->ID;
 			$ebh_order_number = $this->Eboekhouden_Plugins->ebhGetOrderNumber( $item->ID );
-
-			//$ebh_order_number = $item->getID();
 
 			return '<a href="post.php?post=' . $item->ID . '&action=edit">' . $ebh_order_number . '</a>';
 		}
 
-//        public function column_post_title($item) {
-//            return $item->post_name;
-//        }        
+		public function column_post_title( $item ) {
+			$order = wc_get_order( $item->ID );
+
+			if ( $order->get_parent_id() !== 0 ) {
+				$parent_order = wc_get_order( $order->get_parent_id() );
+				$title        = 'Refund ' . $order->get_id() . ' for Order <a href="post.php?post=' . $parent_order->get_id() . '&action=edit">' . $parent_order->get_order_number() . '</a>';
+			} else {
+				$title = '<a href="post.php?post=' . $order->get_id() . '&action=edit">' . $order->get_order_number() . '</a>';
+			}
+
+			return $title;
+		}
 
 		public function column_post_date( $item ) {
 			return $item->post_date;
@@ -213,8 +215,8 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
 				'posts_per_page' => $per_page,
 				'offset'         => $offset,
-				'date_query' => array(
-					'after' => date('2019-12-30' ), // Only show orders after specific date.
+				'date_query'     => array(
+					'after'     => date( '2019-12-30' ), // Only show orders after specific date.
 					'inclusive' => false,
 				),
 				'orderby'        => $orderby,
@@ -226,7 +228,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 			$posts       = $query_order->posts;
 
 			// Add refunds as separate posts.
-			/*$refunded_posts = array();
+			$refunded_posts = array();
 			foreach ( $posts as $post ) {
 				$order = wc_get_order( $post->ID );
 
@@ -241,9 +243,9 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				}
 			}
 
-			$posts       = array_merge( $posts, $refunded_posts );*/
+			$posts = array_merge( $posts, $refunded_posts );
 
-			$total_items = count( $posts );
+			//$total_items = count( $posts );
 
 			$pagination_args = array(
 				'total_items' => Eboekhouden_Orders::CountOrders( $eb_order_status ),

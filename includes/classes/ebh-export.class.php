@@ -1,411 +1,286 @@
 <?php
-if (!function_exists('is_admin') && !defined('_EBOEKHOUDEN_PLUGIN')) {
-    header('Status: 403 Forbidden');
-    header('HTTP/1.1 403 Forbidden');
-    exit();
-}
 
+defined( 'ABSPATH' ) || exit;
 
-/**
- * - [ ] Add 'error / debug' logging
- * - [ ] ?? Add 'check' if customer has all 'required' fields
- */
+class Eboekhouden_Export {
 
+	private $wc_order_id;
+	private $wc_order;
 
+	private $ebh_export_customer;
+	private $ebh_export_mutations;
 
-if (!class_exists("Eboekhouden_Export")) {
-    
-    class Eboekhouden_Export {
-        
-        private $wc_order_id;
-        private $wc_order;
-        //private $wc_tax;
-        
-        private $ebh_export_customer;
-        private $ebh_export_mutations;
-        
-        private $Eboekhouden_Settings;
-        private $Eboekhouden_Taxes;
-        private $Eboekhouden_Largenumbers;
-        private $Eboekhouden_Session;
-        private $Eboekhouden_Plugins;
-        
-        
-        
-        function __construct($order_id) {
-            $order = new WC_Order($order_id);
-            
-            if (!$order instanceof WC_Order) {
-                ebh_debug_message('$order is not an WC_Order Object!', 'Eboekhouden_Export', '__construct', 'export.log');
-                wp_die('TEMP ERROR: Invalid order object');                
-            }
-            
-            $this->wc_order_id = $order_id;
-            $this->wc_order = $order;
-            
-            /** ?? Integrate in  'Eboekhouden_Taxes class??: */
-            //$this->wc_tax = new WC_Tax();       //looking for appropriate vat for specific product
-            
-            $this->ebh_export_customer = array();
-            $this->ebh_export_mutations = array();
-            
-            $this->Eboekhouden_Settings = new Eboekhouden_Settings();
-            $this->Eboekhouden_Taxes = new Eboekhouden_Taxes();
-            $this->Eboekhouden_Largenumbers = new Eboekhouden_Largenumbers();
-            $this->Eboekhouden_Session = new Eboekhouden_Session();
-            $this->Eboekhouden_Plugins = new Eboekhouden_Plugins();
-            
-        }
-        
-        
-        
-        private function ebh_build_customer() {
-            /**             
-             * Customer Format
-             * <NAW>
-             *  <BEDRIJF>Yvonne van der A-Mulder</BEDRIJF>
-             *  <ADRES>Hondsdraflaan 14</ADRES>
-             *  <POSTCODE>2121RA</POSTCODE>
-             *  <PLAATS>Bennebroek</PLAATS>
-             *  <TELEFOON>023-5849879</TELEFOON>
-             *  <EMAIL>info@email.nl</EMAIL>
-             * </NAW>
-             */
+	private $Eboekhouden_Settings;
+	private $Eboekhouden_Taxes;
+	private $Eboekhouden_Largenumbers;
+	private $Eboekhouden_Session;
+	private $Eboekhouden_Plugins;
 
-            $customer = array(
-                'BEDRIJF' => strlen($this->wc_order->get_billing_company()) > 0 ? $this->wc_order->get_billing_company() : implode(' ', array($this->wc_order->get_billing_first_name(), $this->wc_order->get_billing_last_name())),
-                'ADRES' => implode(' ', array($this->wc_order->get_billing_address_1(), $this->wc_order->get_billing_address_2())),
-                'POSTCODE' => $this->wc_order->get_billing_postcode(),
-                'PLAATS' => $this->wc_order->get_billing_city(),
-                'TELEFOON' => $this->wc_order->get_billing_phone(), // RBS 260117
-                'EMAIL' => $this->wc_order->get_billing_email(), // RBS 260117
-            );
+	function __construct( $order_id ) {
+		$order = new WC_Order( $order_id );
 
-	        $vat_number = get_post_meta( $this->wc_order_id, '_vat_number', true );
-	        if ( '' !== $vat_number ) {
-	        	$customer['OBNUMMER'] = (string) $vat_number;
-	        }
+		if ( ! $order instanceof WC_Order ) {
+			ebh_debug_message( '$order is not an WC_Order Object!', 'Eboekhouden_Export', '__construct', 'export.log' );
+			wp_die( 'TEMP ERROR: Invalid order object' );
+		}
 
-            $this->ebh_export_customer = apply_filters('ebh_filter_build_customer', $customer, $this->wc_order_id, $this->wc_order);
-        }
-        
-        
-        
-        
-        private function ebh_wc_order_items() {            
-            
-            $orderItems = $this->wc_order->get_items();
-            $orderDiscount = $this->wc_order->get_total_discount();
+		$this->wc_order_id = $order_id;
+		$this->wc_order    = $order;
 
-            foreach($orderItems as $orderItem) {
-                $item_data = $orderItem->get_data();
-                $tax_class = $orderItem['tax_class'];
-                $rates = $this->Eboekhouden_Taxes->wcTax()->get_rates($tax_class);//var_dump($tax_class);
-                //var_dump($rates);
-                $rate = current($rates);
-                $orderItemProduct = new WC_Product($orderItem['product_id']);
-                $largenumber = $orderItemProduct->get_attribute('large_number');
+		$this->ebh_export_customer  = array();
+		$this->ebh_export_mutations = array();
 
-                if (strlen($orderItemProduct->get_sale_price()) && $orderItemProduct->get_sale_price() < $orderItemProduct->get_regular_price()) {
-                    // do something with discount
-                }
-//var_dump($item_data);//die();
-                $row_total = (float) $item_data['total'];
-                $row_sub_total = (float) $item_data['subtotal'];
-                $row_quantity = (float) $item_data['quantity'];
-                
-                // lower discount
-                if ($row_total < $row_sub_total) {
-                    $orderDiscount = $orderDiscount - (($row_sub_total - $row_total));
-                };
+		$this->Eboekhouden_Settings     = new Eboekhouden_Settings();
+		$this->Eboekhouden_Taxes        = new Eboekhouden_Taxes();
+		$this->Eboekhouden_Largenumbers = new Eboekhouden_Largenumbers();
+		$this->Eboekhouden_Session      = new Eboekhouden_Session();
+		$this->Eboekhouden_Plugins      = new Eboekhouden_Plugins();
+	}
 
-                $mutation = new Eboekhouden_Mutation('orderitem', $this->wc_order_id);
-                $mutation->SetTotal($item_data['total'] + $item_data['total_tax']);
-                $mutation->SetSubTotal($item_data['total']);
-                $mutation->SetTaxTotal($item_data['total_tax']);
-				$mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
+	private function ebh_build_customer( $order ) {
+		/**
+		 * Customer Format
+		 * <NAW>
+		 *  <BEDRIJF>Yvonne van der A-Mulder</BEDRIJF>
+		 *  <ADRES>Hondsdraflaan 14</ADRES>
+		 *  <POSTCODE>2121RA</POSTCODE>
+		 *  <PLAATS>Bennebroek</PLAATS>
+		 *  <TELEFOON>023-5849879</TELEFOON>
+		 *  <EMAIL>info@email.nl</EMAIL>
+		 * </NAW>
+		 */
 
-	            $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($orderItem, $this->wc_order->get_id(), $orderItemProduct->is_virtual());
-                $mutation->SetTaxPercent($taxCode);
+		$customer = array(
+			'BEDRIJF'  => strlen( $order->get_billing_company() ) > 0 ? $order->get_billing_company() : implode( ' ', array(
+				$order->get_billing_first_name(),
+				$order->get_billing_last_name()
+			) ),
+			'ADRES'    => implode( ' ', array(
+				$order->get_billing_address_1(),
+				$order->get_billing_address_2()
+			) ),
+			'POSTCODE' => $order->get_billing_postcode(),
+			'PLAATS'   => $order->get_billing_city(),
+			'TELEFOON' => $order->get_billing_phone(), // RBS 260117
+			'EMAIL'    => $order->get_billing_email(), // RBS 260117
+		);
 
-                $this->ebh_export_mutations[] = $mutation->GetMutation();
-            
-            }       
-        }
-        
-        private function ebh_wc_shipping() {
-        	if( (int) $this->wc_order->get_shipping_total() <= 0 ) {
-        		return;
-	        }
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
+		if ( '' !== $vat_number ) {
+			$customer['OBNUMMER'] = (string) $vat_number;
+		}
 
-        	foreach ( $this->wc_order->get_shipping_methods() as $shipping_id => $shipping ) {
+		$this->ebh_export_customer = apply_filters( 'ebh_filter_build_customer', $customer, $order->get_id(), $order );
+	}
 
-		        $mutation = new Eboekhouden_Mutation('shipping', $this->wc_order_id);
-		        $mutation->SetTotal( (float) $shipping->get_total() + (float) $shipping->get_total_tax());
-		        $mutation->SetSubTotal((float)$shipping->get_total());
-		        $mutation->SetTaxTotal((float)$shipping->get_total_tax());
-		        //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
-		        $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('shippingcost'));
+	private function ebh_wc_order_items( $order ) {
+		foreach ( $order->get_items() as $orderItem ) {
+			$item_data        = $orderItem->get_data();
+			$orderItemProduct = new WC_Product( $orderItem['product_id'] );
 
-		        $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($shipping, $this->wc_order->get_id());
-		        $mutation->SetTaxPercent($taxCode);
+			$mutation = new Eboekhouden_Mutation( 'orderitem', $order->get_id() );
+			$mutation->SetTotal( (float) $item_data['total'] + (float) $item_data['total_tax'] );
+			$mutation->SetSubTotal( (float) $item_data['total'] );
+			$mutation->SetTaxTotal( (float) $item_data['total_tax'] );
+			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'paymentcost' ) );
 
-		        $this->ebh_export_mutations[] = $mutation->GetMutation();
+			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $orderItem, $order->get_id(), $orderItemProduct->is_virtual() );
+			$mutation->SetTaxPercent( $taxCode );
 
-	        }
-        }
+			$this->ebh_export_mutations[] = $mutation->GetMutation();
+		}
+	}
 
-        private function ebh_wc_refunds() {
-            $orderRefunds = $this->wc_order->get_refunds();
+	private function ebh_wc_shipping( $order ) {
+		foreach ( $order->get_shipping_methods() as $shipping_id => $shipping ) {
+			$mutation = new Eboekhouden_Mutation( 'shipping', $order->get_id() );
+			$mutation->SetTotal( (float) $shipping->get_total() + (float) $shipping->get_total_tax() );
+			$mutation->SetSubTotal( (float) $shipping->get_total() );
+			$mutation->SetTaxTotal( (float) $shipping->get_total_tax() );
+			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'shippingcost' ) );
 
-            /** @var WC_Order_Refund $refund */
-	        foreach ($orderRefunds as $refund) {
-				$mutation = new Eboekhouden_Mutation( 'refund', $refund->id );
-				$mutation->SetTotal( get_post_meta( $refund->id, '_order_total', true ) );
-				$mutation->SetSubTotal( get_post_meta( $refund->id, '_order_total', true ) - get_post_meta( $refund->id, '_order_tax', true ) );
-				$mutation->SetTaxTotal( get_post_meta( $refund->id, '_order_tax', true ) );
-				$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'refund' ) );
+			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $shipping, $order->get_id() );
+			$mutation->SetTaxPercent( $taxCode );
 
-				$taxCode = $this->Eboekhouden_Taxes->GetTaxCode($refund, $this->wc_order_id); // ToDo!
-				$mutation->SetTaxPercent( $taxCode );
+			$this->ebh_export_mutations[] = $mutation->GetMutation();
+		}
+	}
 
-				$this->ebh_export_mutations[] = $mutation->GetMutation();
-            }
-        }
-        
+	private function ebh_wc_fees( $order ) {
+		foreach ( $order->get_items( 'fee' ) as $key => $fee ) {
+			$mutation = new Eboekhouden_Mutation( 'fees', $order->get_id() );
+			$mutation->SetTotal( (float) $fee->get_total() + (float) $fee->get_total_tax() );
+			$mutation->SetSubTotal( (float) $fee->get_total() );
+			$mutation->SetTaxTotal( (float) $fee->get_total_tax() );
+			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'paymentcost' ) );
+			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $fee, $order->get_id() );
+			$mutation->SetTaxPercent( $taxCode );
 
-        private function ebh_wc_fees() {
-            
-            $fees = $this->wc_order->get_fees();
-            if (count($fees) > 0 ) {
+			$this->ebh_export_mutations[] = $mutation->GetMutation( true );
+		}
+	}
 
-	            /**
-	             * @var WC_Order_Item_Fee $fee.
-	             */
-                foreach ($fees as $key => $fee) {
+	/*public function ebhExportOrder($order) {
+		$export = $order->getExportOrder();
 
-//                    $fee_mutation = array(
-//                       'BEDRAGINCL' => 0,
-//                       'BEDRAGEXCL' => 0,
-//                       'BTWBEDRAG' => 0,
-//                       'TEGENREKENING' =>  $pluginSettings['ebh_paymentcost_largenumber'],
-//                        'BTWPERC' => (isset($rate['label'])) ? $this->Eboekhouden_Taxes->ebhGetTaxcode($rate['label']) : ''
-//
-//
-//                    );
+		$res = self::_getResponse($export);
 
+		$rbs_order = new WC_Order($order->_data->ID);
 
+		$rbs_order_id = $rbs_order->get_id();
 
-                    $line_total = $fee->get_total();
-                    $btw_bedrag = $fee->get_total_tax();
+		$rbs_order_number = apply_filters( 'woocommerce_order_number', $rbs_order_id, $rbs_order );
 
-                    $mutation = new Eboekhouden_Mutation('fees', $this->wc_order_id);
-                    $mutation->SetTotal($line_total + $btw_bedrag);
-                    $mutation->SetSubTotal($line_total);
-                    $mutation->SetTaxTotal($btw_bedrag);
-                    //$mutation->SetLargeNumber(isset($pluginSettings['ebh_paymentcost_largenumber']) ? $pluginSettings['ebh_paymentcost_largenumber'] : '');
-                    $mutation->SetLargeNumber($this->Eboekhouden_Largenumbers->ebhGetLargenumber('paymentcost'));
-                    //$mutation->SetLargeNumber($pluginSettings['ebh_shippingcost_largenumber']);
-                    //$mutation->SetTaxPercent(EboekhoudenJaagers::$taxCodes[$shippingTaxRate['label']]);
-	                $taxCode = $this->Eboekhouden_Taxes->GetTaxCode($fee, $this->wc_order->get_id());
-	                $mutation->SetTaxPercent($taxCode);
+		if (isset($res->MUTNR)) {
+			$_SESSION['eboekhouder-notices'][] = array(
+				'type'      => 'success',
+				'message'   => 'Order ' . $rbs_order_number . ": " . $res->RESULT . " mutatie " . $res->MUTNR
 
-    //                $fee_mutation['BEDRAGINCL'] = round($line_total + $btw_bedrag, 2);
-    //                $fee_mutation['BEDRAGEXCL'] = round($line_total,2);
-    //                $fee_mutation['BTWBEDRAG'] = round($btw_bedrag,2);
-    //                $mutation_rule = array(
-    //                'MUTATIEREGEL' =>   $fee_mutation
-    //                );
-    //                
-    //                
-    //                $this->_mutations[] = $mutation_rule;
+			);
 
-                    $this->ebh_export_mutations[] = $mutation->GetMutation(true);    
+			return (int)$res->MUTNR;
+		}
 
+		$_SESSION['eboekhouder-notices'][] = array(
+			'type'      => 'error',
+			'message'   => 'Order ' . $rbs_order_number . ": " . $res->ERROR->CODE . " " . $res->ERROR->DESCRIPTION
 
+			);
 
-                }
+		return 0;
+	}*/
 
-    //            die();
+	public function ebhExportOrder() {
+		$export_data = $this->ebhBuildExport();
 
-            }            
-        }        
-        
-        
-        
-        
-        
-//        private function ebh_build_products() {
-//            
-//        }
-        
-        
-//        public function ebhExportOrder($order) {
-//            $export = $order->getExportOrder();
-//
-//            $res = self::_getResponse($export);
-//
-//            $rbs_order = new WC_Order($order->_data->ID);
-//
-//            $rbs_order_id = $rbs_order->get_id();
-//
-//            $rbs_order_number = apply_filters( 'woocommerce_order_number', $rbs_order_id, $rbs_order );
-//
-//            if (isset($res->MUTNR)) {
-//                $_SESSION['eboekhouder-notices'][] = array(
-//                    'type'      => 'success',
-//                    'message'   => 'Order ' . $rbs_order_number . ": " . $res->RESULT . " mutatie " . $res->MUTNR
-//
-//                );
-//
-//                return (int)$res->MUTNR;
-//            }
-//
-//            $_SESSION['eboekhouder-notices'][] = array(
-//                'type'      => 'error',
-//                'message'   => 'Order ' . $rbs_order_number . ": " . $res->ERROR->CODE . " " . $res->ERROR->DESCRIPTION
-//
-//                );
-//
-//            return 0;
-//        }      
-        
-        
-        
-        private function ebh_get_ordernumber() {
-////$order = new WC_Order($this->_data->ID);
-//$order = wc_get_order($this->_data->ID);
-//
-////$rbs_order_id = $order->get_id();
-//$rbs_order_date = $order->get_date_created();
-//
-///*** Check 'how to' format the OrderNumber: ***/
-//if (class_exists('WC_Sequential_Order_Numbers') or function_exists('init_woocommerce_sequential_order_numbers_pro')) {
-//    $rbs_order_number = apply_filters( 'woocommerce_order_number', $order->id, $order );
-//} elseif (class_exists('WPO_WCPDF')) {
-//    $invoice = wcpdf_get_invoice( $order );            
-//    if ( $invoice_number = $invoice->get_number() ) {
-//        $rbs_order_number = $invoice_number->get_formatted();
-//    }
-//} elseif (class_exists('WooCommerce_PDF_Invoices') ) {
-//    $wpo_wcpdf = new WooCommerce_PDF_Invoices();  
-//    $wpo_wcpdf->load_classes();
-//    $rbs_order_number = $wpo_wcpdf->export->get_invoice_number($order->id);
-//} else {
-//    $rbs_order_number = apply_filters( 'woocommerce_order_number', $order->id, $order );
-//    $rbs_order_number = sprintf('%08d',$rbs_order_number);
-//}
-//
-///*** Return 'default' OrderNumber as 'fallback' (When not set) ***/
-//if (is_string($rbs_order_number) && strlen($rbs_order_number) == 0) {
-//    $rbs_order_number = $order->get_order_number();
-//}               
-            
-        }
-        
-        
-        public function ebhExportOrder() {
+		if ( get_post_meta( $this->wc_order_id, 'mutation_nr', true ) ) {
+			$action = 'ALTER_MUTATIE';
+		} else {
+			$action = 'ADD_MUTATIE';
+		}
 
-            //die('ebhExportOrder');
-            $export_data = $this->ebhBuildExport();
-            //$export_data = array_merge($this->ebh_export_customer, $this->ebh_export_mutations);
+		$Eboekhouden_Connector = new Eboekhouden_Connector();
+		$result                = $Eboekhouden_Connector->ebhSend( $action, $export_data );
 
-            
-            if (get_post_meta($this->wc_order_id, 'mutation_nr', true)) {
-                $action = 'ALTER_MUTATIE';
-            } else {
-                $action = 'ADD_MUTATIE';
-            }
-            
-            $Eboekhouden_Connector = new Eboekhouden_Connector();
-            $result = $Eboekhouden_Connector->ebhSend($action, $export_data);
-            
-            // SimpleXMLElement Object ( [RESULT] => OK [MUTNR] => 131 ) 1aaaaaaaaaaaa
-            
-            $ebh_order_number = apply_filters('woocommerce_order_number', $this->wc_order_id, $this->wc_order);
-            
-            if (isset($result->RESULT) && isset($result->MUTNR)) {
-                $message = 'Order ' . $ebh_order_number . ": " . $result->RESULT . " mutatie " . $result->MUTNR;
-                //$this->Eboekhouden_Session->ebhAddNotice($this->Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message); 
-                $this->Eboekhouden_Session->ebhAddNotice(Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message); 
+		$ebh_order_number = apply_filters( 'woocommerce_order_number', $this->wc_order_id, $this->wc_order );
 
-                $return = array(
-                    'order_id' => $this->wc_order_id,
-                    'mutation_nr' => (int) $result->MUTNR
-                );
-                
-            } else {
-                $message = $ebh_order_number . ": " . $result->ERROR->CODE . " " . $result->ERROR->DESCRIPTION;
-                ebh_debug_message($message, 'Eboekhouden_Export', 'ebhExportOrder', 'export.log');
-                $this->Eboekhouden_Session->ebhAddNotice($this->Eboekhouden_Session::MESSAGE_TYPE_ERROR, $message); 
+		if ( isset( $result->RESULT ) && isset( $result->MUTNR ) ) {
+			$message = 'Order ' . $ebh_order_number . ": " . $result->RESULT . " mutatie " . $result->MUTNR;
+			//$this->Eboekhouden_Session->ebhAddNotice($this->Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message);
+			$this->Eboekhouden_Session->ebhAddNotice( Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message );
 
-                $return = array(
-                    'order_id' => $this->wc_order_id,
-                    'mutation_nr' => false
-                );            
-                
-            }
-            
-            
-            return $return;
-        }        
-        
-        
-        
-        public function ebhBuildExport() {
-            
-            $this->ebh_build_customer();
-            
-            
-            $this->ebh_wc_order_items();
-            $this->ebh_wc_shipping();
-            $this->ebh_wc_fees();
-            //$this->ebh_wc_refunds();
-            
-//               return array(
-//                    'ACTION' => $this->_data->mutation_nr ? 'ALTER_MUTATIE' : 'ADD_MUTATIE',
-//                    'MUTATIE' => array(
-//                        'NAW' => $this->_customer,
-//                        'SOORT' => 2,
-//                        'REKENING' => 1300,
-//                        'INEX' => 'EX',
-//                        //'FACTUUR' => sprintf('%08s', $order->id),
-//                        
-//                        //'FACTUUR' => sprintf('%08s',$rbs_order_number),
-//                        'FACTUUR' => $rbs_order_number,
-//                        'BETALINGSTERMIJN' => 30,
-//                        'DATUM' => date('d-m-Y', strtotime($rbs_order_date)),
-//                        'BETALINGSKENMERK' => '#' . (string) $this->_data->ID,
-//                        'MUTATIEREGELS' => $this->_mutations
-//                    )     
-            
-         
-            
+			$return = array(
+				'order_id'    => $this->wc_order_id,
+				'mutation_nr' => (int) $result->MUTNR
+			);
 
-            $ebh_payment_term = $this->Eboekhouden_Settings->ebhGetOption('ebh_payment_term', 30);
-            $ebh_order_date = date('d-m-Y', strtotime($this->wc_order->get_date_created()));
-            $ebh_order_number = (string) $this->Eboekhouden_Plugins->ebhGetOrderNumber($this->wc_order_id);
-            $ebh_payment_reference = '#' . (string) $this->Eboekhouden_Plugins->ebhGetOrderPaymentReference($this->wc_order_id);
-            //$ebh_payment_reference = '#' . (string) $this->wc_order_id;
-            
-            
-            
-            
-            $return = array();
-            $return['MUTATIE'] = array (
-                'NAW' => $this->ebh_export_customer,
-                'SOORT' => 2,
-                'REKENING' => 1300,
-                'INEX' => 'EX',
-                'FACTUUR' => $ebh_order_number,
-                'BETALINGSTERMIJN' => $ebh_payment_term,                                       // create setting?
-                'DATUM' => $ebh_order_date,
-                'BETALINGSKENMERK' => $ebh_payment_reference,
-                'MUTATIEREGELS' => $this->ebh_export_mutations
-            );
+		} else {
+			$message = $ebh_order_number . ": " . $result->ERROR->CODE . " " . $result->ERROR->DESCRIPTION;
+			ebh_debug_message( $message, 'Eboekhouden_Export', 'ebhExportOrder', 'export.log' );
+			$this->Eboekhouden_Session->ebhAddNotice( $this->Eboekhouden_Session::MESSAGE_TYPE_ERROR, $message );
 
-            return apply_filters('ebh_filter_build_export', $return, $this->wc_order_id, $this->wc_order_id);            
-        }
-    }
-    
+			$return = array(
+				'order_id'    => $this->wc_order_id,
+				'mutation_nr' => false
+			);
+
+		}
+
+		return $return;
+	}
+
+	private function is_order_fully_refunded() {
+		if ( $this->wc_order->get_parent_id() === 0 ) {
+			return false;
+		}
+
+		$refund = new WC_Order_Refund( $this->wc_order->get_id() );
+		if ( 'Order fully refunded.' !== $refund->get_reason() ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public function ebhBuildExport() {
+		// Fully refunded orders do not have any refunded items so we need to get the parent items.
+		if ( $this->is_order_fully_refunded() ) {
+			$parent_order = wc_get_order( $this->wc_order->get_parent_id() );
+			$this->ebh_build_customer( $parent_order );
+			$this->ebh_wc_order_items( $parent_order );
+			$this->ebh_wc_shipping( $parent_order );
+			$this->ebh_wc_fees( $parent_order );
+
+			// Items need to be negative?
+			foreach ( $this->ebh_export_mutations as $index => $mutation ) {
+				foreach ( $mutation['MUTATIEREGEL'] as $key => $value ) {
+					if ( 'BEDRAGINCL' === $key || 'BEDRAGEXCL' === $key || 'BTWBEDRAG' === $key ) {
+						if ( $value >= 0 ) {
+							$this->ebh_export_mutations[ $index ]['MUTATIEREGEL'][ $key ] = - $value;
+						} else {
+							// Discounts needs to be positive.
+							$this->ebh_export_mutations[ $index ]['MUTATIEREGEL'][ $key ] = abs( $value );
+						}
+					}
+				}
+			}
+		} else {
+			// No fully refunded order.
+			$this->ebh_build_customer( $this->wc_order );
+			$this->ebh_wc_order_items( $this->wc_order );
+			$this->ebh_wc_shipping( $this->wc_order );
+			$this->ebh_wc_fees( $this->wc_order );
+		}
+
+		$return['MUTATIE'] = array(
+			'NAW'              => $this->ebh_export_customer,
+			'SOORT'            => 2,
+			'REKENING'         => 1300,
+			'INEX'             => 'EX',
+			'FACTUUR'          => $this->get_invoice_number( $this->wc_order ),
+			'BETALINGSTERMIJN' => $this->Eboekhouden_Settings->ebhGetOption( 'ebh_payment_term', 30 ),
+			'DATUM'            => date( 'd-m-Y', strtotime( $this->wc_order->get_date_created() ) ),
+			'OMSCHRIJVING'     => $this->get_payment_reference( $this->wc_order ),
+			'MUTATIEREGELS'    => $this->ebh_export_mutations
+		);
+
+		return apply_filters( 'ebh_filter_build_export', $return, $this->wc_order_id, $this->wc_order_id );
+	}
+
+	private function get_payment_reference( $order ) {
+		if ( $order->get_parent_id() !== 0 ) {
+			// Is refund.
+			$parent_order = wc_get_order( $order->get_parent_id() );
+
+			return 'Refund ' . $order->get_id() . ' for Order ' . $parent_order->get_order_number();
+		}
+
+		return 'Order ' . $order->get_order_number();
+	}
+
+	private function get_invoice_number( $order ) {
+		// WooCommerce PDF Invoices plugins?
+		if ( function_exists( 'WPI' ) && function_exists( 'WPIP' ) && false !== BEWPI_Abstract_Invoice::exists( $order->get_id() ) ) {
+			if ( $order->get_parent_id() !== 0 ) {
+				// Refund.
+				$credit_note = new BEWPIP_Credit_Note( $order->get_id() );
+
+				return $credit_note->get_formatted_number();
+			} else {
+				$invoice = WPI()->get_invoice( $order->get_id() );
+
+				return $invoice->get_formatted_number();
+			}
+		}
+
+		// Use order number as invoice number.
+		if ( $order->get_parent_id() !== 0 ) {
+			// Is refund.
+			$parent_order = wc_get_order( $order->get_parent_id() );
+
+			return $parent_order->get_order_number();
+		}
+
+		return $order->get_order_number();
+	}
 }

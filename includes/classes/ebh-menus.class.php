@@ -118,7 +118,7 @@ if (!class_exists("Eboekhouden_Menus")) {
 
             if(count($items)) {
                 $args = array(
-                    'post_type'     => 'shop_order',
+                    'post_type'     => array( 'shop_order', 'shop_order_refund' ),
                     'post_status'   => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
                     'nopaging'      => true,
                     'post__in'      => $items
@@ -135,11 +135,11 @@ if (!class_exists("Eboekhouden_Menus")) {
                 }
 
 
-                foreach ($exports as $export) { 
+                /*foreach ($exports as $export) {
                     if(isset($export['order_id']) && isset($export['mutation_nr']) && isset($export['mutation_nr']) !== false) {
                         update_post_meta($export['order_id'], 'mutation_nr', $export['mutation_nr']);
                     }
-                }
+                }*/
 
             }
 
