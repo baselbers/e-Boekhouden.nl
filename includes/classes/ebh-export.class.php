@@ -237,7 +237,7 @@ class Eboekhouden_Export {
 			'SOORT'            => 2,
 			'REKENING'         => 1300,
 			'INEX'             => 'EX',
-			'FACTUUR'          => $this->get_invoice_number( $this->wc_order ),
+			'FACTUUR'          => $this->wc_order->get_order_number(),
 			'BETALINGSTERMIJN' => $this->Eboekhouden_Settings->ebhGetOption( 'ebh_payment_term', 30 ),
 			'DATUM'            => date( 'd-m-Y', strtotime( $this->wc_order->get_date_created() ) ),
 			'OMSCHRIJVING'     => $this->get_payment_reference( $this->wc_order ),
@@ -248,14 +248,18 @@ class Eboekhouden_Export {
 	}
 
 	private function get_payment_reference( $order ) {
+		$payment_reference = $this->get_invoice_number( $order );
+
 		if ( $order->get_parent_id() !== 0 ) {
 			// Is refund.
 			$parent_order = wc_get_order( $order->get_parent_id() );
 
-			return 'Refund ' . $order->get_id() . ' for Order ' . $parent_order->get_order_number();
+			$payment_reference = 'Credit ' . $payment_reference . ' Refund ' . $order->get_id() . ' for Order ' . $parent_order->get_order_number();
+		} else {
+			$payment_reference = 'Invoice ' . $payment_reference . ' Order ' . $order->get_order_number();
 		}
 
-		return 'Order ' . $order->get_order_number();
+		return $payment_reference;
 	}
 
 	private function get_invoice_number( $order ) {
