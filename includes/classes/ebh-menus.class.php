@@ -150,7 +150,9 @@ if ( ! class_exists( "Eboekhouden_Menus" ) ) {
 
 				foreach ( $exports as $export ) {
 					if ( isset( $export['order_id'] ) && isset( $export['mutation_nr'] ) && isset( $export['mutation_nr'] ) !== false ) {
-						update_post_meta( $export['order_id'], 'mutation_nr', $export['mutation_nr'] );
+						if ( false === defined( 'EBOEKHOUDEN_DEBUG' ) ) {
+							update_post_meta( $export['order_id'], 'mutation_nr', $export['mutation_nr'] );
+						}
 					}
 				}
 			}

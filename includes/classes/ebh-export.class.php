@@ -50,11 +50,15 @@ class Eboekhouden_Export {
 		 * </NAW>
 		 */
 
+		$name = strlen( $order->get_billing_company() ) > 0 ? $order->get_billing_company() : implode( ' ', array(
+			$order->get_billing_first_name(),
+			$order->get_billing_last_name()
+		) );
+
 		$customer = array(
-			'BEDRIJF'  => strlen( $order->get_billing_company() ) > 0 ? $order->get_billing_company() : implode( ' ', array(
-				$order->get_billing_first_name(),
-				$order->get_billing_last_name()
-			) ),
+			//@todo 'BP'       => (string) $order->get_billing_company() !== '' ? 'B' : 'P',
+			'CODE'     => substr( $name, 0, 15 ),
+			'BEDRIJF'  => $name,
 			'ADRES'    => implode( ' ', array(
 				$order->get_billing_address_1(),
 				$order->get_billing_address_2()
