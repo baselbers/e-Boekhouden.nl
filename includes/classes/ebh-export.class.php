@@ -50,23 +50,23 @@ class Eboekhouden_Export {
 		 * </NAW>
 		 */
 
-		$name = strlen( $order->get_billing_company() ) > 0 ? $order->get_billing_company() : implode( ' ', array(
+		$name = (string) $order->get_billing_company() !== '' ? $order->get_billing_company() : implode( ' ', array(
 			$order->get_billing_first_name(),
-			$order->get_billing_last_name()
+			$order->get_billing_last_name(),
 		) );
 
 		$customer = array(
-			//@todo 'BP'       => (string) $order->get_billing_company() !== '' ? 'B' : 'P',
+			'BP'       => (string) $order->get_billing_company() === '' ? 'P' : 'B',
 			'CODE'     => substr( $name, 0, 15 ),
 			'BEDRIJF'  => $name,
 			'ADRES'    => implode( ' ', array(
 				$order->get_billing_address_1(),
-				$order->get_billing_address_2()
+				$order->get_billing_address_2(),
 			) ),
 			'POSTCODE' => $order->get_billing_postcode(),
 			'PLAATS'   => $order->get_billing_city(),
-			'TELEFOON' => $order->get_billing_phone(), // RBS 260117
-			'EMAIL'    => $order->get_billing_email(), // RBS 260117
+			'TELEFOON' => $order->get_billing_phone(),
+			'EMAIL'    => $order->get_billing_email(),
 		);
 
 		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
@@ -230,7 +230,15 @@ class Eboekhouden_Export {
 			}
 		} else {
 			// No fully refunded order.
-			$this->ebh_build_customer( $this->wc_order );
+
+			if ( $this->wc_order->get_parent_id() > 0 ) {
+				// Is refund.
+				$parent_order = wc_get_order( $this->wc_order->get_parent_id() );
+				$this->ebh_build_customer( $parent_order );
+			} else {
+				$this->ebh_build_customer( $this->wc_order );
+			}
+
 			$this->ebh_wc_order_items( $this->wc_order );
 			$this->ebh_wc_shipping( $this->wc_order );
 			$this->ebh_wc_fees( $this->wc_order );
