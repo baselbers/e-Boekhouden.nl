@@ -58,15 +58,19 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			$oq_args = array(
 				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
-				'posts_per_page' => - 1,
-				'date_query'     => array(
-					'after'     => date( '2019-12-30' ), // Only show orders after specific date.
-					'inclusive' => false,
-				),
+				'posts_per_page' => -1,
 				'fields'         => 'ids',      // << ivm grote aantallen alleen id's ophalen ipv alle velden
 				'orderby'        => $orderby,
 				'order'          => $order
 			);
+
+			$settings = get_option('ebh_settings_general');
+			if ( isset( $settings['ebh_order_after_date'] ) && '' !== $settings['ebh_order_after_date'] ) {
+				$oq_args['date_query'] = array(
+					'after'     => date( $settings['ebh_order_after_date'] ),
+					'inclusive' => false,
+				);
+			}
 
 			$oq_args     = array_merge( $oq_args, $meta_query );
 			$query_order = new WP_Query( $oq_args );

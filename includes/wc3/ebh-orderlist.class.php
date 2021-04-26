@@ -159,7 +159,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 		}
 
 		public function prepare_items() {
-			$tab          = $_GET['tab'];
+			$tab          = isset( $_GET['tab'] ) ? $_GET['tab'] : 'not_mutated';
 			$per_page     = $this->max_orders_per_page;
 			$current_page = $this->get_pagenum();
 
@@ -174,13 +174,17 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
 				'posts_per_page' => $per_page,
 				'offset'         => $offset,
-				'date_query'     => array(
-					'after'     => date( '2019-12-30' ), // Only show orders after specific date.
-					'inclusive' => false,
-				),
 				'orderby'        => ! empty( $_GET['orderby'] ) ? $_GET['orderby'] : 'ID',
 				'order'          => ! empty( $_GET['order'] ) ? $_GET['order'] : 'desc',
 			);
+
+			$order_after_date = $this->Eboekhouden_Settings->ebhGetOption( 'ebh_order_after_date', '' );
+			if ( '' !== $order_after_date ) {
+				$args['date_query'] = array(
+					'after'     => date( $order_after_date ),
+					'inclusive' => false,
+				);
+			}
 
 			// Search order.
 			if ( isset( $_POST['s'] ) && '' !== $_POST['s'] ) {

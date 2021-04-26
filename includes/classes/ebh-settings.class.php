@@ -73,6 +73,7 @@ if (!class_exists("Eboekhouden_Settings")) {
         private $ebh_product_list_max;
         private $ebh_plugin_ordernumber;
         private $ebh_plugin_payment_reference;
+        private $ebh_order_after_date;
         
         
         // Advanced settings:
@@ -104,6 +105,7 @@ if (!class_exists("Eboekhouden_Settings")) {
             $this->ebh_product_list_max = (isset($general_settings['ebh_product_list_max'])) ? $general_settings['ebh_product_list_max'] : 100;
             $this->ebh_plugin_ordernumber = (isset($general_settings['ebh_plugin_ordernumber'])) ? $general_settings['ebh_plugin_ordernumber'] : 'default';
             $this->ebh_plugin_payment_reference = (isset($general_settings['ebh_plugin_payment_reference'])) ? $general_settings['ebh_plugin_payment_reference'] : 'default';
+	        $this->ebh_order_after_date = (isset($general_settings['ebh_order_after_date'])) ? $general_settings['ebh_order_after_date'] : '';
                         
             $license_settings = get_option('ebh_settings_license');
             $this->ebh_username = (isset($license_settings['ebh_username'])) ? $license_settings['ebh_username'] : null;
@@ -178,6 +180,7 @@ if (!class_exists("Eboekhouden_Settings")) {
             add_settings_field('ebh_product_list_max', __('Max. products per page', 'eboekhouden'), array($this, 'ebh_setting_general'), 'ebh_settings_general', 'ebh_plugin_settings_section_general', array('name' => 'ebh_product_list_max'));
             add_settings_field('ebh_plugin_ordernumber', __('Ordernumber plugin', 'eboekhouden'), array($this, 'ebh_setting_general'), 'ebh_settings_general', 'ebh_plugin_settings_section_general', array('name' => 'ebh_plugin_ordernumber'));
             add_settings_field('ebh_plugin_payment_reference', __('Payment refence plugin', 'eboekhouden'), array($this, 'ebh_setting_general'), 'ebh_settings_general', 'ebh_plugin_settings_section_general', array('name' => 'ebh_plugin_payment_reference'));
+	        add_settings_field('ebh_order_after_date', __('Order after date', 'eboekhouden'), array($this, 'ebh_setting_general'), 'ebh_settings_general', 'ebh_plugin_settings_section_general', array('name' => 'ebh_order_after_date'));
                         
             /** Large-number settings: **/
             add_settings_section('ebh_plugin_settings_section_largenumbers', __('Largenumbers', 'eboekhouden'), array($this, 'ebh_settings_section_callback'), 'ebh_settings_largenumbers');            
@@ -254,7 +257,9 @@ if (!class_exists("Eboekhouden_Settings")) {
                     $output .= __('If set to "DEFAULT", it uses the same as "Ordernumber plugin"', 'eboekhouden');
                     $output .= '</p>';
                 }                
-            }             
+            } elseif ($property == 'ebh_order_after_date') {
+	            $output .= '<input type="text" name="ebh_settings_general[' . $property . ']" placeholder="YYYY-MM-DD" value="' . $this->$property . '" style="width: 400px">';
+            }
             
             echo $output;            
         }
