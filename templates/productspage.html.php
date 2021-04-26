@@ -19,7 +19,7 @@
         // Disabled because of wordpress check/compare ($_GET['page'] == $_POST['page']) >>  Check 'usage'  looks like it is NOT used
         /* <input type="hidden" name="page" value="eboekhouden_product_list_table">        */
         ?>
-        <?php $product_list->search_box(__('search', 'eboekhouden'), 'ebh_search_product'); ?>
+        <?php $product_list->search_box(__('Search', 'eboekhouden'), 'ebh_search_product'); ?>
         <?php $product_list->display(); ?>    
     </form>
 <?php else: ?>

@@ -159,45 +159,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 		}
 
 		public function prepare_items() {
-			$eb_order_status = ( filter_input( INPUT_GET, 'tab' ) ) ? filter_input( INPUT_GET, 'tab' ) : 'not_mutated';
-			if ( $eb_order_status == 'not_mutated' ) {
-				$meta_query = array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'mutation_nr',
-						'compare' => 'NOT EXISTS'
-					)
-				);
-			} elseif ( $eb_order_status == 'mutated' ) {
-				$meta_query = array(
-					'relation' => 'OR',
-					array(
-						'key'     => 'mutation_nr',
-						'compare' => 'EXISTS'
-					)
-				);
-			} else {
-				$meta_query = array();
-			}
-
-			if ( isset( $_POST['s'] ) ) {
-				$meta_query_search = array(
-					'relation' => 'OR',
-					array(
-						'key'     => '_ebh_order_number',
-						'value'   => $_POST['s'],
-						'compare' => 'LIKE'
-					)
-				);
-				$meta_query        = array_merge( $meta_query, $meta_query_search );
-			}
-
-			$columns = $this->get_columns();
-
-			$hidden                = array();
-			$sortable              = $this->get_sortable_columns();
-			$this->_column_headers = array( $columns, $hidden, $sortable );
-
+			$tab          = $_GET['tab'];
 			$per_page     = $this->max_orders_per_page;
 			$current_page = $this->get_pagenum();
 
@@ -207,11 +169,8 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 				$offset = $current_page * $per_page - $per_page;
 			}
 
-			$orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'ID';
-			$order   = ( ! empty( $_GET['order'] ) ) ? $_GET['order'] : 'desc';
-
-			$oq_args = array(
-				'post_type'      => 'shop_order',
+			$args = array(
+				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
 				'posts_per_page' => $per_page,
 				'offset'         => $offset,
@@ -219,43 +178,57 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 					'after'     => date( '2019-12-30' ), // Only show orders after specific date.
 					'inclusive' => false,
 				),
-				'orderby'        => $orderby,
-				'order'          => $order,
-				'meta_query'     => $meta_query
+				'orderby'        => ! empty( $_GET['orderby'] ) ? $_GET['orderby'] : 'ID',
+				'order'          => ! empty( $_GET['order'] ) ? $_GET['order'] : 'desc',
 			);
 
-			$query_order = new WP_Query( $oq_args );
-			$posts       = $query_order->posts;
+			// Search order.
+			if ( isset( $_POST['s'] ) && '' !== $_POST['s'] ) {
+				$s     = $_POST['s'];
 
-			// Add refunds as separate posts.
-			$refunded_posts = array();
-			foreach ( $posts as $post ) {
-				$order = wc_get_order( $post->ID );
-
-				// sanity check
-				if ( ! is_object( $order ) ) {
-					continue;
+				// Remove prefix.
+				if ( 7 === strlen( $s ) ) {
+					$s = (int) substr( $s, 1, 7 );
 				}
 
-				$refunds = $order->get_refunds();
-				foreach ( $refunds as $refund ) {
-					$refunded_posts[] = get_post( $refund->get_id() );
-				}
+				$args['post__in'] = array( (int) $s );
 			}
 
-			$posts = array_merge( $posts, $refunded_posts );
+			// Tabs.
+			if ( 'not_mutated' === $tab ) {
+				$args['meta_query'] = array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'mutation_nr',
+						'compare' => 'NOT EXISTS'
+					)
+				);
+			} elseif ( 'mutated' === $tab ) {
+				$args['meta_query'] = array(
+					'relation' => 'OR',
+					array(
+						'key'     => 'mutation_nr',
+						'compare' => 'EXISTS'
+					)
+				);
+			}
 
-			//$total_items = count( $posts );
+			$results = new WP_Query( $args );
+
+			$columns               = $this->get_columns();
+			$sortable              = $this->get_sortable_columns();
+			$this->_column_headers = array( $columns, array(), $sortable );
+
+			$this->set_data( $results->get_posts() );
+			$this->items = $this->data;
 
 			$pagination_args = array(
-				'total_items' => Eboekhouden_Orders::CountOrders( $eb_order_status ),
-				'per_page'    => $per_page
+				'total_items' => (int) $results->found_posts,
+				'total_pages' => $results->max_num_pages,
+				'per_page'    => $per_page,
 			);
 
-			$this->set_data( $posts );
 			$this->set_pagination_args( $pagination_args );
-
-			$this->items = $this->data;
 		}
 	}
 }

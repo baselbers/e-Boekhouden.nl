@@ -56,7 +56,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			$order   = ( ! empty( $_GET['order'] ) ) ? $_GET['order'] : 'desc';
 
 			$oq_args = array(
-				'post_type'      => 'shop_order',
+				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
 				'posts_per_page' => - 1,
 				'date_query'     => array(
