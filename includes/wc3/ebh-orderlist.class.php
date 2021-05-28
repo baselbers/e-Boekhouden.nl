@@ -204,7 +204,15 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
-						'compare' => 'NOT EXISTS'
+						'compare' => '=',
+						'value'   => ''
+					),
+					array(
+						'relation' => 'OR',
+						array(
+							'key'     => 'mutation_nr',
+							'compare' => 'NOT EXISTS'
+						)
 					)
 				);
 			} elseif ( 'mutated' === $tab ) {
@@ -212,8 +220,9 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
-						'compare' => 'EXISTS'
-					)
+						'compare' => '!=',
+						'value'   => ''
+					),
 				);
 			}
 

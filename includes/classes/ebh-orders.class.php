@@ -40,13 +40,28 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 		private static function GetOrders( $status = 'all' ) {
 			if ( $status == 'not_mutated' ) {
 				$meta_query = array(
-					'meta_key'     => 'mutation_nr',
-					'meta_compare' => 'NOT EXISTS'
+					'relation' => 'OR',
+					array(
+						'key'     => 'mutation_nr',
+						'compare' => '=',
+						'value'   => ''
+					),
+					array(
+						'relation' => 'OR',
+						array(
+							'key'     => 'mutation_nr',
+							'compare' => 'NOT EXISTS'
+						)
+					)
 				);
 			} elseif ( $status == 'mutated' ) {
 				$meta_query = array(
-					'meta_key'     => 'mutation_nr',
-					'meta_compare' => 'EXISTS'
+					'relation' => 'OR',
+					array(
+						'key'     => 'mutation_nr',
+						'compare' => '!=',
+						'value'   => ''
+					),
 				);
 			} else {
 				$meta_query = array();
@@ -72,7 +87,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 				);
 			}
 
-			$oq_args     = array_merge( $oq_args, $meta_query );
+			$oq_args['meta_query'] = $meta_query;
 			$query_order = new WP_Query( $oq_args );
 
 			return $query_order;
