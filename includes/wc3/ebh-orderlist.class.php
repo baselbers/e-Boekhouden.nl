@@ -202,26 +202,25 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 			if ( 'not_mutated' === $tab ) {
 				$args['meta_query'] = array(
 					'relation' => 'OR',
-					array(
+					/*array(
 						'key'     => 'mutation_nr',
 						'compare' => '=',
 						'value'   => ''
 					),
 					array(
-						'relation' => 'OR',
+						'relation' => 'OR',*/
 						array(
 							'key'     => 'mutation_nr',
 							'compare' => 'NOT EXISTS'
 						)
-					)
+					//)
 				);
 			} elseif ( 'mutated' === $tab ) {
 				$args['meta_query'] = array(
 					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
-						'compare' => '!=',
-						'value'   => ''
+						'compare' => 'EXISTS',
 					),
 				);
 			}

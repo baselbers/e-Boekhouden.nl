@@ -43,15 +43,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
-						'compare' => '=',
-						'value'   => ''
-					),
-					array(
-						'relation' => 'OR',
-						array(
-							'key'     => 'mutation_nr',
-							'compare' => 'NOT EXISTS'
-						)
+						'compare' => 'NOT EXISTS'
 					)
 				);
 			} elseif ( $status == 'mutated' ) {
@@ -59,8 +51,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
-						'compare' => '!=',
-						'value'   => ''
+						'compare' => 'EXISTS',
 					),
 				);
 			} else {
@@ -73,13 +64,13 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			$oq_args = array(
 				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
 				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
-				'posts_per_page' => -1,
+				'posts_per_page' => - 1,
 				'fields'         => 'ids',      // << ivm grote aantallen alleen id's ophalen ipv alle velden
 				'orderby'        => $orderby,
 				'order'          => $order
 			);
 
-			$settings = get_option('ebh_settings_general');
+			$settings = get_option( 'ebh_settings_general' );
 			if ( isset( $settings['ebh_order_after_date'] ) && '' !== $settings['ebh_order_after_date'] ) {
 				$oq_args['date_query'] = array(
 					'after'     => date( $settings['ebh_order_after_date'] ),
@@ -88,7 +79,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			}
 
 			$oq_args['meta_query'] = $meta_query;
-			$query_order = new WP_Query( $oq_args );
+			$query_order           = new WP_Query( $oq_args );
 
 			return $query_order;
 		}

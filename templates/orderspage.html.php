@@ -6,11 +6,11 @@
     
     <h2><?php _e('Orders', 'eboekhouden'); ?></h2>
 
-    <h2 class="nav-tab-wrapper">        
+    <h2 class="nav-tab-wrapper">
         <a href="?page=eboekhouden-orders&tab=not_mutated" class="nav-tab <?php echo ($active_tab == 'not_mutated') ? 'nav-tab-active' : ''?> "><?php _e('Not mutated', 'eboekhouden'); echo ' (' . $order_count['not_mutated'] .')'; ?></a>
         <a href="?page=eboekhouden-orders&tab=mutated" class="nav-tab <?php echo ($active_tab == 'mutated') ? 'nav-tab-active' : ''?> "><?php _e('Mutated', 'eboekhouden'); echo ' (' . $order_count['mutated'] .')'; ?></a>
         <a href="?page=eboekhouden-orders&tab=all" class="nav-tab <?php echo ($active_tab == 'all') ? 'nav-tab-active' : ''?> "><?php _e('All', 'eboekhouden'); echo ' (' . $order_count['all'] .')'; ?></a>
-    </h2>       
+    </h2>
     
     <form method="post">
         <?php 
