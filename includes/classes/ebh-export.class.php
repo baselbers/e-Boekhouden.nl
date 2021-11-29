@@ -74,6 +74,11 @@ class Eboekhouden_Export {
 			$customer['OBNUMMER'] = (string) $vat_number;
 		}
 
+		$vat_number = get_post_meta( $order->get_id(), '_billing_vat_number', true );
+		if ( '' !== $vat_number ) {
+			$customer['OBNUMMER'] = (string) $vat_number;
+		}
+
 		$this->ebh_export_customer = apply_filters( 'ebh_filter_build_customer', $customer, $order->get_id(), $order );
 	}
 
