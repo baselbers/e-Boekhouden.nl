@@ -171,7 +171,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 
 			$args = array(
 				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
-				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
+				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded', 'wc-waiting', 'wc-shipped' ),
 				'posts_per_page' => $per_page,
 				'offset'         => $offset,
 				'orderby'        => ! empty( $_GET['orderby'] ) ? $_GET['orderby'] : 'ID',
@@ -188,7 +188,7 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 
 			// Search order.
 			if ( isset( $_POST['s'] ) && '' !== $_POST['s'] ) {
-				$s     = $_POST['s'];
+				$s = $_POST['s'];
 
 				// Remove prefix.
 				if ( 7 === strlen( $s ) ) {
@@ -201,23 +201,18 @@ if ( ! class_exists( 'Eboekhouden_Orderlist' ) ) {
 			// Tabs.
 			if ( 'not_mutated' === $tab ) {
 				$args['meta_query'] = array(
-					'relation' => 'OR',
-					/*array(
+					array(
 						'key'     => 'mutation_nr',
-						'compare' => '=',
-						'value'   => ''
+						'compare' => 'NOT EXISTS'
 					),
 					array(
-						'relation' => 'OR',*/
-						array(
-							'key'     => 'mutation_nr',
-							'compare' => 'NOT EXISTS'
-						)
-					//)
+						'key'     => '_order_total',
+						'value'   => '0.00',
+						'compare' => '!='
+					),
 				);
 			} elseif ( 'mutated' === $tab ) {
 				$args['meta_query'] = array(
-					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
 						'compare' => 'EXISTS',

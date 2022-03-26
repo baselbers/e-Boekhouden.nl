@@ -37,25 +37,35 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			return self::GetOrders( 'all' )->post_count;
 		}
 
+		/**
+		 * Get order to count them.
+		 *
+		 * @param string $status
+		 *
+		 * @return WP_Query
+		 */
 		private static function GetOrders( $status = 'all' ) {
+			$meta_query = array();
+
 			if ( $status == 'not_mutated' ) {
 				$meta_query = array(
-					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
 						'compare' => 'NOT EXISTS'
-					)
+					),
+					array(
+						'key'     => '_order_total',
+						'value'   => '0.00',
+						'compare' => '!='
+					),
 				);
 			} elseif ( $status == 'mutated' ) {
 				$meta_query = array(
-					'relation' => 'OR',
 					array(
 						'key'     => 'mutation_nr',
 						'compare' => 'EXISTS',
 					),
 				);
-			} else {
-				$meta_query = array();
 			}
 
 			$orderby = ( ! empty( $_GET['orderby'] ) ) ? $_GET['orderby'] : 'ID';
@@ -63,7 +73,7 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 
 			$oq_args = array(
 				'post_type'      => array( 'shop_order', 'shop_order_refund' ),
-				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded' ),
+				'post_status'    => array( 'wc-processing', 'wc-completed', 'wc-refunded', 'wc-waiting', 'wc-shipped' ),
 				'posts_per_page' => - 1,
 				'fields'         => 'ids',      // << ivm grote aantallen alleen id's ophalen ipv alle velden
 				'orderby'        => $orderby,
@@ -79,9 +89,8 @@ if ( ! class_exists( 'Eboekhouden_Orders' ) ) {
 			}
 
 			$oq_args['meta_query'] = $meta_query;
-			$query_order           = new WP_Query( $oq_args );
 
-			return $query_order;
+			return new WP_Query( $oq_args );
 		}
 
 		public function ebhFormatOrdernumber( $order_id ) {

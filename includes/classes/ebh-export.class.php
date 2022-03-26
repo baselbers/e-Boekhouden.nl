@@ -16,6 +16,8 @@ class Eboekhouden_Export {
 	private $Eboekhouden_Session;
 	private $Eboekhouden_Plugins;
 
+	private $oss_largenumbers;
+
 	function __construct( $order_id ) {
 		$order = new WC_Order( $order_id );
 
@@ -35,6 +37,43 @@ class Eboekhouden_Export {
 		$this->Eboekhouden_Largenumbers = new Eboekhouden_Largenumbers();
 		$this->Eboekhouden_Session      = new Eboekhouden_Session();
 		$this->Eboekhouden_Plugins      = new Eboekhouden_Plugins();
+
+		$this->oss_largenumbers = array(
+			'AT' => 1660,
+			'BE' => 1661,
+			'BG' => 1662,
+			'CY' => 1663,
+			'CZ' => 1664,
+			'DE' => 1665,
+			'DK' => 1666,
+			'EE' => 1667,
+			'ES' => 1668,
+			'FI' => 1669,
+			'FR' => 1670,
+			'GR' => 1671,
+			'HR' => 1672,
+			'HU' => 1673,
+			'IE' => 1674,
+			'IT' => 1675,
+			'LT' => 1676,
+			'LU' => 1677,
+			'LV' => 1678,
+			'MT' => 1679,
+			'PL' => 1680,
+			'PT' => 1681,
+			'RO' => 1682,
+			'SE' => 1683,
+			'SI' => 1684,
+			'SK' => 1685
+		);
+	}
+
+	private function get_oss_largenumber( $country_code ) {
+		if ( key_exists( $country_code, $this->oss_largenumbers ) ) {
+			return $this->oss_largenumbers[ $country_code ];
+		}
+
+		return 0;
 	}
 
 	private function ebh_build_customer( $order ) {
@@ -82,15 +121,26 @@ class Eboekhouden_Export {
 		$this->ebh_export_customer = apply_filters( 'ebh_filter_build_customer', $customer, $order->get_id(), $order );
 	}
 
-	private function ebh_wc_order_items( $order ) {
+	/**
+	 * @param $order
+	 */
+	private function ebh_wc_order_items( $order, $is_order_oss = false ) {
 		foreach ( $order->get_items() as $orderItem ) {
 			$item_data        = $orderItem->get_data();
 			$orderItemProduct = new WC_Product( $orderItem['product_id'] );
 
 			$mutation = new Eboekhouden_Mutation( 'orderitem', $order->get_id() );
-			$mutation->SetTotal( (float) $item_data['total'] + (float) $item_data['total_tax'] );
 			$mutation->SetSubTotal( (float) $item_data['total'] );
-			$mutation->SetTaxTotal( (float) $item_data['total_tax'] );
+
+			if ( $is_order_oss === true ) {
+				$mutation->SetTaxTotal( 0.00 );
+				$mutation->SetTotal( (float) $item_data['total'] );
+
+			} else {
+				$mutation->SetTaxTotal( (float) $item_data['total_tax'] );
+				$mutation->SetTotal( (float) $item_data['total'] + (float) $item_data['total_tax'] );
+			}
+
 			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'paymentcost' ) );
 
 			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $orderItem, $order->get_id(), $orderItemProduct->is_virtual() );
@@ -100,12 +150,20 @@ class Eboekhouden_Export {
 		}
 	}
 
-	private function ebh_wc_shipping( $order ) {
+	private function ebh_wc_shipping( $order, $is_order_oss = false ) {
 		foreach ( $order->get_shipping_methods() as $shipping_id => $shipping ) {
 			$mutation = new Eboekhouden_Mutation( 'shipping', $order->get_id() );
-			$mutation->SetTotal( (float) $shipping->get_total() + (float) $shipping->get_total_tax() );
 			$mutation->SetSubTotal( (float) $shipping->get_total() );
-			$mutation->SetTaxTotal( (float) $shipping->get_total_tax() );
+
+			if ( $is_order_oss === true ) {
+				$mutation->SetTaxTotal( 0.00 );
+				$mutation->SetTotal( (float) $shipping->get_total() );
+
+			} else {
+				$mutation->SetTaxTotal( (float) $shipping->get_total_tax() );
+				$mutation->SetTotal( (float) $shipping->get_total() + (float) $shipping->get_total_tax() );
+			}
+
 			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'shippingcost' ) );
 
 			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $shipping, $order->get_id() );
@@ -115,12 +173,20 @@ class Eboekhouden_Export {
 		}
 	}
 
-	private function ebh_wc_fees( $order ) {
+	private function ebh_wc_fees( $order, $is_order_oss = false ) {
 		foreach ( $order->get_items( 'fee' ) as $key => $fee ) {
 			$mutation = new Eboekhouden_Mutation( 'fees', $order->get_id() );
-			$mutation->SetTotal( (float) $fee->get_total() + (float) $fee->get_total_tax() );
 			$mutation->SetSubTotal( (float) $fee->get_total() );
-			$mutation->SetTaxTotal( (float) $fee->get_total_tax() );
+
+			if ( $is_order_oss === true ) {
+				$mutation->SetTaxTotal( 0.00 );
+				$mutation->SetTotal( (float) $fee->get_total() );
+
+			} else {
+				$mutation->SetTaxTotal( (float) $fee->get_total_tax() );
+				$mutation->SetTotal( (float) $fee->get_total() + (float) $fee->get_total_tax() );
+			}
+
 			$mutation->SetLargeNumber( $this->Eboekhouden_Largenumbers->ebhGetLargenumber( 'paymentcost' ) );
 			$taxCode = $this->Eboekhouden_Taxes->GetTaxCode( $fee, $order->get_id() );
 			$mutation->SetTaxPercent( $taxCode );
@@ -129,35 +195,22 @@ class Eboekhouden_Export {
 		}
 	}
 
-	/*public function ebhExportOrder($order) {
-		$export = $order->getExportOrder();
+	private function ebh_wc_oss( $order ) {
+		$mutation = new Eboekhouden_Mutation( 'tax', $order->get_id() );
+		$mutation->SetSubTotal( (float) $order->get_total_tax() );
+		$mutation->SetTaxTotal( 0.00 );
+		$mutation->SetTotal( (float) $order->get_total_tax() );
 
-		$res = self::_getResponse($export);
-
-		$rbs_order = new WC_Order($order->_data->ID);
-
-		$rbs_order_id = $rbs_order->get_id();
-
-		$rbs_order_number = apply_filters( 'woocommerce_order_number', $rbs_order_id, $rbs_order );
-
-		if (isset($res->MUTNR)) {
-			$_SESSION['eboekhouder-notices'][] = array(
-				'type'      => 'success',
-				'message'   => 'Order ' . $rbs_order_number . ": " . $res->RESULT . " mutatie " . $res->MUTNR
-
-			);
-
-			return (int)$res->MUTNR;
+		$oss_largenumber = $this->get_oss_largenumber( $order->get_billing_country() );
+		if ( $oss_largenumber === 0 ) {
+			wc_get_logger()->critical( 'No largenumber for OSS order.' );
 		}
 
-		$_SESSION['eboekhouder-notices'][] = array(
-			'type'      => 'error',
-			'message'   => 'Order ' . $rbs_order_number . ": " . $res->ERROR->CODE . " " . $res->ERROR->DESCRIPTION
+		$mutation->SetLargeNumber( $oss_largenumber );
+		$mutation->SetTaxPercent( 'GEEN' );
 
-			);
-
-		return 0;
-	}*/
+		$this->ebh_export_mutations[] = $mutation->GetMutation( true );
+	}
 
 	public function ebhExportOrder() {
 		$export_data = $this->ebhBuildExport();
@@ -175,8 +228,7 @@ class Eboekhouden_Export {
 
 		if ( isset( $result->RESULT ) && isset( $result->MUTNR ) ) {
 			$message = 'Order ' . $ebh_order_number . ": " . $result->RESULT . " mutatie " . $result->MUTNR;
-			//$this->Eboekhouden_Session->ebhAddNotice($this->Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message);
-			$this->Eboekhouden_Session->ebhAddNotice( Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message );
+			$this->Eboekhouden_Session->ebhAddNotice( $this->Eboekhouden_Session::MESSAGE_TYPE_SUCCESS, $message );
 
 			$return = array(
 				'order_id'    => $this->wc_order_id,
@@ -215,10 +267,17 @@ class Eboekhouden_Export {
 		// Fully refunded orders do not have any refunded items so we need to get the parent items.
 		if ( $this->is_order_fully_refunded() ) {
 			$parent_order = wc_get_order( $this->wc_order->get_parent_id() );
+
+			$is_order_oss = $this->order_is_oss( $parent_order );
+
 			$this->ebh_build_customer( $parent_order );
-			$this->ebh_wc_order_items( $parent_order );
-			$this->ebh_wc_shipping( $parent_order );
-			$this->ebh_wc_fees( $parent_order );
+			$this->ebh_wc_order_items( $parent_order, $is_order_oss );
+			$this->ebh_wc_shipping( $parent_order, $is_order_oss );
+			$this->ebh_wc_fees( $parent_order, $is_order_oss );
+
+			if ( $is_order_oss === true ) {
+				$this->ebh_wc_oss( $this->wc_order );
+			}
 
 			// Items need to be negative?
 			foreach ( $this->ebh_export_mutations as $index => $mutation ) {
@@ -244,9 +303,15 @@ class Eboekhouden_Export {
 				$this->ebh_build_customer( $this->wc_order );
 			}
 
-			$this->ebh_wc_order_items( $this->wc_order );
-			$this->ebh_wc_shipping( $this->wc_order );
-			$this->ebh_wc_fees( $this->wc_order );
+			$is_order_oss = $this->order_is_oss( $this->wc_order );
+
+			$this->ebh_wc_order_items( $this->wc_order, $is_order_oss );
+			$this->ebh_wc_shipping( $this->wc_order, $is_order_oss );
+			$this->ebh_wc_fees( $this->wc_order, $is_order_oss );
+
+			if ( $is_order_oss === true ) {
+				$this->ebh_wc_oss( $this->wc_order );
+			}
 		}
 
 		$return['MUTATIE'] = array(
@@ -262,6 +327,51 @@ class Eboekhouden_Export {
 		);
 
 		return apply_filters( 'ebh_filter_build_export', $return, $this->wc_order_id, $this->wc_order_id );
+	}
+
+	/**
+	 * Check if Order is OSS.
+	 *
+	 * @param $order WC_Order order object.
+	 *
+	 * @return bool
+	 * @throws Exception
+	 */
+	private function order_is_oss( $order ) {
+		// Unieregeling started 1-4-2022 for us.
+		$unie_date = new WC_DateTime( '2022-04-01', new DateTimeZone( wp_timezone_string() ) );
+		if ( $order->get_date_paid() < $unie_date ) {
+			return false;
+		}
+
+		// Home country.
+		if ( $order->get_billing_country() === 'NL' ) {
+			return false;
+		}
+
+		// No EU.
+		if ( in_array( $order->get_billing_country(), WC()->countries->get_european_union_countries(), true ) === false ) {
+			return false;
+		}
+
+		// No business.
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
+		if ( ! empty( $vat_number ) ) {
+
+			$is_vat_exempt = get_post_meta( $order->get_id(), 'is_vat_exempt', true );
+			if ( $is_vat_exempt !== 'yes' ) {
+				wc_get_logger()->critical( 'VAT is not exempt while VAT number exists. ' . print_r( $order, true ) );
+			}
+
+			return false;
+		}
+
+		// No low tax percentage.
+		if ( (float) abs( $order->get_total_tax() ) <= 9.00 ) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private function get_payment_reference( $order ) {
