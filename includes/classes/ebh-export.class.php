@@ -360,7 +360,7 @@ class Eboekhouden_Export {
 
 			$is_vat_exempt = get_post_meta( $order->get_id(), 'is_vat_exempt', true );
 			if ( $is_vat_exempt !== 'yes' ) {
-				wc_get_logger()->critical( 'VAT is not exempt while VAT number exists. ' . print_r( $order, true ) );
+				wc_get_logger()->critical( sprintf( 'VAT is not exempt while VAT number exists on Order #%s.', $order->get_id() ) );
 			}
 
 			return false;

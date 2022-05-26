@@ -42,13 +42,13 @@ class Eboekhouden_Taxes {
 		// WooCommerce EU VAT Number plugin should be used to validate VAT ID with VIES.
 		$order = wc_get_order( $order_id );
 
-		if ( $order->get_billing_country() !== $order->get_shipping_country() ) {
-			wc_get_logger()->critical( 'Billing country is not the same as shipping country. ' . print_r( $order, true ) );
-		}
-
 		// Check if refund.
 		if ( $order->get_parent_id() !== 0 ) {
 			$order = wc_get_order( $order->get_parent_id() );
+		}
+
+		if ( $order->get_billing_country() !== $order->get_shipping_country() ) {
+			wc_get_logger()->critical( sprintf( 'Billing country is not the same as shipping country on Order #%s.', $order->get_id() ) );
 		}
 
 		// NL always higher rate.
@@ -62,12 +62,12 @@ class Eboekhouden_Taxes {
 		}
 
 		// Intra-Community Goods & Services.
-		$vat_number    = get_post_meta( $order_id, '_vat_number', true );
+		$vat_number = get_post_meta( $order_id, '_vat_number', true );
 		if ( ! empty( $vat_number ) ) {
 
 			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
 			if ( $is_vat_exempt !== 'yes' ) {
-				wc_get_logger()->critical( 'VAT is not exempt while VAT number exists. ' . print_r( $order, true ) );
+				wc_get_logger()->critical( sprintf( 'VAT is not exempt while VAT number exists on Order #%s.', $order->get_id() ) );
 			}
 
 			if ( $virtual ) {
@@ -81,13 +81,14 @@ class Eboekhouden_Taxes {
 		// No tax.
 		if ( (float) $item->get_total_tax() === 0.00 ) {
 
-			wc_get_logger()->critical( 'No tax on private order. ' . print_r( $order, true ) );
+			wc_get_logger()->critical( sprintf( 'No tax on private Order #%s.', $order->get_id() ) );
 
 			return 'GEEN';
 		}
 
 		if ( (float) abs( $item->get_total() ) === 0.00 ) {
-			wc_get_logger()->critical( 'Total amount zero. ' . print_r( $order, true ) );
+			wc_get_logger()->critical( sprintf( 'Total amount zero Order #%s.', $order->get_id() ) );
+
 			return 'GEEN';
 		}
 
@@ -96,7 +97,7 @@ class Eboekhouden_Taxes {
 		$rate_percent = round( (float) abs( $item->get_total_tax() ) / (float) abs( $item->get_total() ) * 100 );
 		if ( (int) $rate_percent > 9 ) {
 
-			wc_get_logger()->debug( 'Unie mutation' . print_r( $order, true ) );
+			wc_get_logger()->critical( sprintf( 'Unie mutation on Order #%s.', $order->get_id() ) );
 
 			// Unieregeling.
 			$unie_date = new WC_DateTime( '2022-04-01', new DateTimeZone( wp_timezone_string() ) );
