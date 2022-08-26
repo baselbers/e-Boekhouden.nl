@@ -48,7 +48,7 @@ class Eboekhouden_Taxes {
 		}
 
 		if ( $order->get_billing_country() !== $order->get_shipping_country() ) {
-			wc_get_logger()->critical( sprintf( 'Billing country is not the same as shipping country on Order #%s.', $order->get_id() ) );
+			wc_get_logger()->critical( sprintf( 'Billing country is not the same as shipping country on Order #%s.', $order->get_order_number() ) );
 		}
 
 		// NL always higher rate.
@@ -62,12 +62,12 @@ class Eboekhouden_Taxes {
 		}
 
 		// Intra-Community Goods & Services.
-		$vat_number = get_post_meta( $order_id, '_vat_number', true );
+		$vat_number = get_post_meta( $order_id, '_vat_number', true ) === '' ? get_post_meta( $order_id, '_billing_vat_number', true ) : '';
 		if ( ! empty( $vat_number ) ) {
 
 			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
 			if ( $is_vat_exempt !== 'yes' ) {
-				wc_get_logger()->critical( sprintf( 'VAT is not exempt while VAT number exists on Order #%s.', $order->get_id() ) );
+				wc_get_logger()->critical( sprintf( 'VAT is not exempt while VAT number exists on Order #%s.', $order->get_order_number() ) );
 			}
 
 			if ( $virtual ) {
@@ -81,13 +81,13 @@ class Eboekhouden_Taxes {
 		// No tax.
 		if ( (float) $item->get_total_tax() === 0.00 ) {
 
-			wc_get_logger()->critical( sprintf( 'No tax on private Order #%s.', $order->get_id() ) );
+			wc_get_logger()->critical( sprintf( 'No tax on private Order #%s.', $order->get_order_number() ) );
 
 			return 'GEEN';
 		}
 
 		if ( (float) abs( $item->get_total() ) === 0.00 ) {
-			wc_get_logger()->critical( sprintf( 'Total amount zero Order #%s.', $order->get_id() ) );
+			wc_get_logger()->info( sprintf( 'Total amount zero Order #%s.', $order->get_order_number() ) );
 
 			return 'GEEN';
 		}
@@ -97,7 +97,7 @@ class Eboekhouden_Taxes {
 		$rate_percent = round( (float) abs( $item->get_total_tax() ) / (float) abs( $item->get_total() ) * 100 );
 		if ( (int) $rate_percent > 9 ) {
 
-			wc_get_logger()->critical( sprintf( 'Unie mutation on Order #%s.', $order->get_id() ) );
+			wc_get_logger()->info( sprintf( 'Unie mutation on Order #%s.', $order->get_order_number() ) );
 
 			// Unieregeling.
 			$unie_date = new WC_DateTime( '2022-04-01', new DateTimeZone( wp_timezone_string() ) );
