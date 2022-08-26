@@ -108,7 +108,12 @@ class Eboekhouden_Export {
 			'EMAIL'    => $order->get_billing_email(),
 		);
 
-		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true ) === '' ? get_post_meta( $order->get_id(), '_billing_vat_number', true ) : '';
+		// Intra-Community Goods & Services.
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
+		if ( $vat_number === '' ) {
+			$vat_number = get_post_meta( $order->get_id(), '_billing_vat_number', true );
+		}
+
 		if ( '' !== $vat_number ) {
 			$customer['OBNUMMER'] = (string) $vat_number;
 		}
@@ -353,7 +358,12 @@ class Eboekhouden_Export {
 		}
 
 		// No business.
-		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true ) === '' ? get_post_meta( $order->get_id(), '_billing_vat_number', true ) : '';
+		// Intra-Community Goods & Services.
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
+		if ( $vat_number === '' ) {
+			$vat_number = get_post_meta( $order->get_id(), '_billing_vat_number', true );
+		}
+
 		if ( ! empty( $vat_number ) ) {
 
 			$is_vat_exempt = get_post_meta( $order->get_id(), 'is_vat_exempt', true );

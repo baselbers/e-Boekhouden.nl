@@ -47,7 +47,7 @@ class Eboekhouden_Taxes {
 			$order = wc_get_order( $order->get_parent_id() );
 		}
 
-		if ( $order->get_billing_country() !== $order->get_shipping_country() ) {
+		if ( false === $virtual && $order->get_billing_country() !== $order->get_shipping_country() ) {
 			wc_get_logger()->critical( sprintf( 'Billing country is not the same as shipping country on Order #%s.', $order->get_order_number() ) );
 		}
 
@@ -62,8 +62,12 @@ class Eboekhouden_Taxes {
 		}
 
 		// Intra-Community Goods & Services.
-		$vat_number = get_post_meta( $order_id, '_vat_number', true ) === '' ? get_post_meta( $order_id, '_billing_vat_number', true ) : '';
-		if ( ! empty( $vat_number ) ) {
+		$vat_number = get_post_meta( $order_id, '_vat_number', true );
+		if ( $vat_number === '' ) {
+			$vat_number = get_post_meta( $order_id, '_billing_vat_number', true );
+		}
+
+		if ( $vat_number !== '' ) {
 
 			$is_vat_exempt = get_post_meta( $order_id, 'is_vat_exempt', true );
 			if ( $is_vat_exempt !== 'yes' ) {
