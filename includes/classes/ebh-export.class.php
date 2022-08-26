@@ -108,12 +108,7 @@ class Eboekhouden_Export {
 			'EMAIL'    => $order->get_billing_email(),
 		);
 
-		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
-		if ( '' !== $vat_number ) {
-			$customer['OBNUMMER'] = (string) $vat_number;
-		}
-
-		$vat_number = get_post_meta( $order->get_id(), '_billing_vat_number', true );
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true ) === '' ? get_post_meta( $order->get_id(), '_billing_vat_number', true ) : '';
 		if ( '' !== $vat_number ) {
 			$customer['OBNUMMER'] = (string) $vat_number;
 		}
@@ -237,7 +232,10 @@ class Eboekhouden_Export {
 
 		} else {
 			$message = $ebh_order_number . ": " . $result->ERROR->CODE . " " . $result->ERROR->DESCRIPTION;
-			ebh_debug_message( $message, 'Eboekhouden_Export', 'ebhExportOrder', 'export.log' );
+
+			wc_get_logger()->critical( $result->ERROR->CODE . " " . $result->ERROR->DESCRIPTION, $ebh_order_number );
+
+			//ebh_debug_message( $message, 'Eboekhouden_Export', 'ebhExportOrder', 'export.log' );
 			$this->Eboekhouden_Session->ebhAddNotice( $this->Eboekhouden_Session::MESSAGE_TYPE_ERROR, $message );
 
 			$return = array(
@@ -355,12 +353,12 @@ class Eboekhouden_Export {
 		}
 
 		// No business.
-		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true );
+		$vat_number = get_post_meta( $order->get_id(), '_vat_number', true ) === '' ? get_post_meta( $order->get_id(), '_billing_vat_number', true ) : '';
 		if ( ! empty( $vat_number ) ) {
 
 			$is_vat_exempt = get_post_meta( $order->get_id(), 'is_vat_exempt', true );
 			if ( $is_vat_exempt !== 'yes' ) {
-				wc_get_logger()->critical( 'VAT is not exempt while VAT number exists. ' . print_r( $order, true ) );
+				wc_get_logger()->critical( sprintf( 'VAT is not exempt while VAT number exists on Order #%s.', $order->get_id() ) );
 			}
 
 			return false;
